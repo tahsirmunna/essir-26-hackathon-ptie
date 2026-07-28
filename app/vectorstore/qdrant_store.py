@@ -104,12 +104,12 @@ class VectorStore:
         A `query_filter` can be added here later to scope retrieval to part of the doc.
         """
         candidate_k = max(top_k * 4, top_k)
-        dense_hits = self.client.search(
+        dense_hits = self.client.query_points(
             collection_name=self.collection,
-            query_vector=vector,
+            query=vector,
             limit=candidate_k,
             with_payload=True,
-        )
+        ).points
         if not query_text or len(dense_hits) <= top_k:
             return dense_hits[:top_k]
 
