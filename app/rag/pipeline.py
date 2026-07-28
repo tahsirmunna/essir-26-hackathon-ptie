@@ -9,6 +9,7 @@ answer, and writes it to `data/out/` as a JSON file you can later copy into `sub
 
 from __future__ import annotations
 
+import re
 import time
 import uuid
 from datetime import UTC, datetime
@@ -20,6 +21,46 @@ from ..llm.factory import get_client
 from ..models import Diagnostics, QueryRequest, QueryResponse, Source
 from . import memory
 from .retrieve import Context, retrieve
+
+_WORD_RE = re.compile(r"[a-zA-Z0-9]+")
+_SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
+_STOPWORDS = {
+    "the", "a", "an", "and", "or", "of", "to", "in", "on", "for", "is", "are", "was",
+    "were", "that", "this", "it", "as", "by", "with", "be", "been", "has", "have", "had",
+    "at", "from", "which", "their", "its", "these", "those", "not", "but", "can", "will",
+    "would", "could", "should", "we", "they", "you", "do", "does", "did",
+}
+
+
+def _tokenize(text: str) -> set[str]:
+    return {w.lower() for w in _WORD_RE.findall(text) if len(w) > 2 and w.lower() not in _STOPWORDS}
+
+
+def _best_supporting_sentence(chunk_text: str, answer_text: str, question: str) -> str:
+    """The sentence within a retrieved chunk that best supports the answer.
+
+    A whole chunk is not a precise citation. We split the chunk into sentences and pick
+    the one with the most word overlap with the generated answer (falling back to the
+    question if the answer shares no vocabulary with the chunk, e.g. a degraded/LLM-
+    unavailable response). If nothing overlaps at all, we keep the full chunk rather than
+    guess — a safe citation beats a confidently wrong one.
+    """
+    sentences = [s.strip() for s in _SENTENCE_SPLIT.split(chunk_text.replace("\n", " ")) if s.strip()]
+    if not sentences:
+        return chunk_text.strip()
+
+    target = _tokenize(answer_text) or _tokenize(question)
+    if not target:
+        return sentences[0]
+
+    best_sentence, best_score = sentences[0], -1
+    for sentence in sentences:
+        score = len(target & _tokenize(sentence))
+        if score > best_score:
+            best_sentence, best_score = sentence, score
+
+    return best_sentence if best_score > 0 else chunk_text.strip()
+
 
 SYSTEM_PROMPT = (
     "You answer questions about a single document using only the context provided. "
@@ -43,13 +84,10 @@ def _build_messages(question: str, contexts: list[Context], history: list[Messag
     return messages
 
 
-def _sources_from(contexts: list[Context]) -> list[Source]:
-    # Baseline: the retrieved units become the citations, truncated to a short quote.
-    # TODO(level-1): a page (or chunk) is not a precise citation. Return the specific
-    #   sentence that supports the answer, with its correct page — not the whole unit.
+def _sources_from(contexts: list[Context], answer_text: str, question: str) -> list[Source]:
     out: list[Source] = []
     for c in contexts:
-        quote = c.text.strip().replace("\n", " ")
+        quote = _best_supporting_sentence(c.text, answer_text, question).replace("\n", " ").strip()
         if len(quote) > 300:
             quote = quote[:300].rsplit(" ", 1)[0] + "…"
         out.append(Source(page=c.page, quote=quote, score=round(c.score, 4)))
@@ -101,7 +139,7 @@ def answer(req: QueryRequest) -> QueryResponse:
         question=req.question,
         answer=answer_text,
         conversation_id=conversation_id,
-        sources=_sources_from(contexts),
+        sources=_sources_from(contexts, answer_text, req.question),
         diagnostics=Diagnostics(
             provider=settings.llm_provider,
             chat_model=settings.chat_model,

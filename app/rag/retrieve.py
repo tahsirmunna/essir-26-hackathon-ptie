@@ -44,7 +44,8 @@ def retrieve(question: str, top_k: int, history: list[Message] | None = None) ->
     #   (retrieve -> reason -> retrieve again), or a second index (e.g. a graph or a
     #   per-section summary index) alongside this one.
     vector = embedder.embed([query], is_query=True)[0]
-    hits = store.search(vector, top_k)
+    # query_text enables the BM25 fusion pass in VectorStore.search (hybrid retrieval).
+    hits = store.search(vector, top_k, query_text=query)
 
     return [
         Context(
