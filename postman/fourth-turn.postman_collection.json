@@ -1,0 +1,75 @@
+{
+  "info": {
+    "name": "AIMultimediaLab @ ESSIR 2026 — The Fourth Turn",
+    "description": "RAG-over-PDF backend — health, ingest and query. Import into Postman (or Bruno / Insomnia / Hoppscotch). {{base_url}} defaults to the app's port (8791). Put your PDF in data/in, then run in order: Ingest, then the Query requests. Each /query response is also written to data/out and is exactly what you copy into submission/.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8791" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": { "method": "GET", "url": "{{base_url}}/health" }
+    },
+    {
+      "name": "Ready (checks Qdrant)",
+      "request": { "method": "GET", "url": "{{base_url}}/health/ready" }
+    },
+    {
+      "name": "List collections",
+      "request": { "method": "GET", "url": "{{base_url}}/collections" }
+    },
+    {
+      "name": "Ingest the PDF (from data/in)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/ingest",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"filename\": null,\n  \"reset\": false\n}"
+        },
+        "description": "Index the first *.pdf in data/in/. Pass \"reset\": true to rebuild, or \"filename\" to pick a specific PDF."
+      }
+    },
+    {
+      "name": "Query — Level 1 (retrieval)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/query",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"question\": \"<a standalone question about your document>\",\n  \"level\": 1\n}"
+        },
+        "description": "Just a question and its level. The system assigns the id and conversation for you. The response is written to data/out."
+      }
+    },
+    {
+      "name": "Query — Level 2 (memory / follow-up)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/query",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"question\": \"<a follow-up that depends on an earlier level-2 question>\",\n  \"level\": 2\n}"
+        },
+        "description": "Send your level-2 questions in order. They automatically share one conversation, so your system can use the earlier turns."
+      }
+    },
+    {
+      "name": "Query — Level 3 (whole-document)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/query",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"question\": \"<a question that needs evidence from across the whole document>\",\n  \"level\": 3\n}"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+# Brings up the app and a Qdrant vector database together.
+#
+#   docker compose up --build
+#
+#   app     -> http://localhost:8791        (Swagger UI at /docs)
+#   qdrant  -> http://localhost:6391        (dashboard at /dashboard)
+#
+# The host ports are deliberately unusual (8791 / 6391) to avoid clashing with anything
+# else on your machine. Inside the containers the standard ports (8000 / 6333) are used.
+# Your local Ollama / LM Studio run on the HOST on their normal ports and are reached via
+# host.docker.internal (mapped below for Linux too).
+
+services:
+  app:
+    build: .
+    ports:
+      - "8791:8000"
+    env_file:
+      - .env
+    environment:
+      # Override the localhost defaults from .env with in-container hostnames.
+      - QDRANT_URL=http://qdrant:6333
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - LMSTUDIO_BASE_URL=http://host.docker.internal:1234
+    volumes:
+      # Your PDF goes in ./data/in; answers are written to ./data/out; your curated
+      # answers live in ./submission. All bind-mounted so they survive rebuilds.
+      - ./data:/app/data
+      - ./submission:/app/submission
+    depends_on:
+      qdrant:
+        condition: service_started
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.4
+    ports:
+      - "6391:6333"   # REST + dashboard
+      - "6392:6334"   # gRPC
+    volumes:
+      - qdrant_storage:/qdrant/storage
+
+volumes:
+  qdrant_storage:
