@@ -10,6 +10,7 @@ ReDoc:       http://localhost:8791/redoc
 from __future__ import annotations
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
 from . import __version__
@@ -44,6 +45,14 @@ def create_app() -> FastAPI:
         title="The Fourth Turn — AIMultimediaLab @ ESSIR 2026",
         version=__version__,
         description=DESCRIPTION,
+    )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     app.include_router(health.router)
