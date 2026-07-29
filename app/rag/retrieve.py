@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ..llm.base import Message
+from ..llm.base import LLMError, Message
+from ..llm.factory import get_client
 from ..vectorstore.qdrant_store import get_store
 from .embeddings import get_embedder
 
@@ -16,20 +17,39 @@ class Context:
     score: float
 
 
+_REWRITE_PROMPT = (
+    "You rewrite follow-up questions into standalone search queries for a document "
+    "retrieval system.\n\n"
+    "Conversation so far:\n{context}\n\n"
+    "Follow-up question: {question}\n\n"
+    "If the follow-up question already stands on its own, repeat it unchanged. "
+    "Otherwise, rewrite it into a single self-contained question that resolves any "
+    "pronouns or implicit references (e.g. 'it', 'that table', 'the dataset') using "
+    "the conversation above. Output only the rewritten question — no explanation, "
+    "no quotes."
+)
+
+
 def rewrite_query(question: str, history: list[Message]) -> str:
     """Resolve a follow-up into a standalone search query.
 
-    TODO(level-2): THIS IS THE KEY FUNCTION FOR CONVERSATIONAL RETRIEVAL and right
-      now it is a no-op. "And the test split?" has no retrievable content on its own,
-      so embedding it returns noise. Use the client's chat model to rewrite the
-      question against `history` into something self-contained
-      ("How large is the test split of <the dataset from the previous turn>?"),
-      then retrieve with that. Leave genuinely standalone questions unchanged.
+    "And the test split?" has no retrievable content on its own, so embedding it
+    returns noise. If there's history, ask the chat model to rewrite the question
+    into something self-contained before it gets embedded. Genuinely standalone
+    questions pass through unchanged, and so does anything if the LLM is unavailable
+    — a no-op is a safer fallback than a broken query.
     """
     if not history:
         return question
-    # Baseline: ignores history. Replace this.
-    return question
+
+    context = "\n".join(f"{m['role']}: {m['content']}" for m in history)
+    prompt = _REWRITE_PROMPT.format(context=context, question=question)
+    try:
+        rewritten = get_client().chat([{"role": "user", "content": prompt}]).strip()
+    except LLMError:
+        return question
+
+    return rewritten or question
 
 
 def retrieve(question: str, top_k: int, history: list[Message] | None = None) -> list[Context]:
