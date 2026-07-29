@@ -16,6 +16,10 @@ __pycache__/
 data/out/*
 !data/out/.gitkeep
 
+# data/memory is scratch (per-conversation summaries); keep the folder, ignore contents.
+data/memory/*
+!data/memory/.gitkeep
+
 # COMMITTED on purpose:
 #   - data/in/  (your chosen PDF — the organisers check answers against it)
 #   - submission/  (your team.json + the nine answers — your deliverable)

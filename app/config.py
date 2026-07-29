@@ -53,6 +53,7 @@ class Settings(BaseSettings):
     # --- Data folders -------------------------------------------------------
     in_dir: str = "data/in"        # put the PDF here; /ingest reads from it
     out_dir: str = "data/out"      # every /query answer is written here as JSON
+    memory_dir: str = "data/memory"  # one running-summary .txt per conversation_id
 
     request_timeout: float = 120.0
 
