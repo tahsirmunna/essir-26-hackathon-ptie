@@ -63,14 +63,25 @@ def _best_supporting_sentence(chunk_text: str, answer_text: str, question: str) 
 
 
 SYSTEM_PROMPT = (
-    "You answer questions about a single document using only the context provided. "
-    "If the context does not contain the answer, say so plainly rather than guessing. "
-    "Be specific and concise."
+    "You answer questions about a single document using only the context provided below. "
+    "Each passage is tagged with its location, e.g. \"[page 4, section \\\"Related Work\\\"]\" "
+    "or \"[page 4]\" when it falls outside any heading. "
+    "Every claim you make must end with an inline citation copied verbatim from one of "
+    "those tags — page alone if that is all the passage gives you, page and section if "
+    "both are present. Cite every distinct passage a claim relies on; never merge two "
+    "citations into one, never cite a page or section that is not shown above, and never "
+    "invent one. "
+    "If the context does not contain the answer, say so plainly and cite nothing — a "
+    "missing citation is better than a wrong one. "
+    "Be specific and concise. Answer plainly without any special formatting, lists, or bullet points. "
 )
 
 
 def _build_messages(question: str, contexts: list[Context], history: list[Message]) -> list[Message]:
-    context_block = "\n\n".join(f"[page {c.page}] {c.text}" for c in contexts) or "(no context retrieved)"
+    def _tag(c: Context) -> str:
+        return f'[page {c.page}, section "{c.section}"]' if c.section else f"[page {c.page}]"
+
+    context_block = "\n\n".join(f"{_tag(c)} {c.text}" for c in contexts) or "(no context retrieved)"
     messages: list[Message] = [{"role": "system", "content": SYSTEM_PROMPT}]
     # Prior turns give the model the conversation so far (Level 2). Retrieval still
     # needs the rewritten query — history in the prompt is necessary but not sufficient.

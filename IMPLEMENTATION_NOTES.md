@@ -12,34 +12,34 @@ to tell a heading from a paragraph, or to cope well with two-column layouts, lig
 and hyphenation. Swapped it for **PyMuPDF** (`fitz`), which segments a page into layout
 blocks and reports each block's font size and bold flag.
 
-`extract_pages()` now returns `list[TextBlock]` (one entry per paragraph-like block,
-each carrying its 1-indexed page, average font size, and whether it's bold) plus the
-total page count. This is a prerequisite for subsection chunking below — the chunker
-needs that font/bold signal to find headings.
+`extract_pages()` now returns `list[TextBlock]`: each PDF block is split, at the span
+level, into a heading (if it opens with a bold/italic section number like "4.2.2") and
+its body text (`_split_heading`), so headings are recognised structurally rather than
+guessed from a font-size ratio.
 
 `pypdf` was dropped from `pyproject.toml`/`uv.lock`; `pymupdf>=1.24` was added.
 
-## 2. Chunking — one-vector-per-page → subsection-aware chunks
+## 2. Chunking — one-vector-per-page → structure-driven chunks
 
 **File:** [`app/rag/chunking.py`](app/rag/chunking.py) — `chunk_pages()`
 
 Previously each whole page became one vector: too coarse to retrieve precisely, and
 too long for the embedding model on dense pages. The new pipeline:
 
-1. **Detect headings.** A block is a heading if its font size is ≥1.15× the document's
-   median body-text size, or it's bold, is a single line, under 120 characters, and
-   doesn't trail off like a sentence (`_is_heading`).
-2. **Group into sections.** Walk the blocks in document order; every heading starts a
-   new section, and non-heading blocks accumulate under it (`_sectionize`). A document
-   with no detectable headings degenerates to one big "section" — the fallback below
-   still applies, so nothing breaks on a plain, unstructured PDF.
-3. **Size-split oversized sections.** A subsection that fits under `CHUNK_SIZE` becomes
-   one chunk as-is. A longer one is split on sentence boundaries (`_atoms`) and packed
-   back together up to `CHUNK_SIZE` with a `CHUNK_OVERLAP`-character tail carried into
-   the next piece (`_pack`), so a fact is never cut mid-sentence.
+1. **Group into sections.** Walk the blocks in document order; every heading block
+   (`TextBlock.is_heading`, set by `extract_pages`) starts a new section named after
+   its number, e.g. `"4.2.2 LLM-Based Reranking"` (`_sectionize`).
+2. **One chunk per paragraph.** No character-count limit and no overlap — each
+   remaining block already corresponds to one paragraph, so it becomes one chunk as-is.
+3. **Tables and figures stay whole.** A block whose text opens with "Table N."/"Fig.
+   N" starts a table/figure group that keeps absorbing whatever immediately follows it
+   that still looks like fragmented table cells rather than normal prose (many short
+   PDF lines for the amount of text, `_looks_tabular`) — `_group_blocks`. Splitting a
+   table by paragraph would scatter its rows across unrelated chunks.
 
-Every `Chunk` keeps `page` (for citations) and `section` (the heading it sits under,
-stored in the Qdrant payload — not yet used for retrieval, but there for a Level-3 pass).
+Every `Chunk` keeps `page` (for citations, never spanning two pages — a table/figure
+group is cut off at a page break the same as anywhere else) and `section` (the heading
+it sits under, stored in the Qdrant payload and now used for citation prompts too).
 
 ## 3. Precise citations — whole chunk → best supporting sentence
 

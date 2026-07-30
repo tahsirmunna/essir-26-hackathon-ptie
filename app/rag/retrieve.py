@@ -15,6 +15,7 @@ class Context:
     text: str
     page: int
     score: float
+    section: str | None = None
 
 
 _REWRITE_PROMPT = (
@@ -72,6 +73,7 @@ def retrieve(question: str, top_k: int, history: list[Message] | None = None) ->
             text=str(h.payload.get("text", "")),
             page=int(h.payload.get("page", 0)),
             score=float(h.score),
+            section=h.payload.get("section") or None,
         )
         for h in hits
     ]

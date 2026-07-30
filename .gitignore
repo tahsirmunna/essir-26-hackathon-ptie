@@ -20,6 +20,10 @@ data/out/*
 data/memory/*
 !data/memory/.gitkeep
 
+# data/logs is scratch (LLM call logs); keep the folder, ignore contents.
+data/logs/*
+!data/logs/.gitkeep
+
 # COMMITTED on purpose:
 #   - data/in/  (your chosen PDF — the organisers check answers against it)
 #   - submission/  (your team.json + the nine answers — your deliverable)

@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     litellm_api_base: str | None = None
     litellm_api_key: str | None = None
 
+    # Every chat() call (system prompt, history, retrieved context, and the reply) is
+    # appended here as one JSON line — inspect it to see exactly what the LLM saw.
+    # Set to "" to disable.
+    llm_log_path: str = "data/logs/llm_calls.jsonl"
+
     # --- Embeddings (turning text into vectors) -----------------------------
     # Out of the box we use a local sentence-transformers model so the app runs with
     # no embedding API and no setup. It downloads on first ingest (~1 GB, once).
@@ -44,11 +49,6 @@ class Settings(BaseSettings):
 
     # --- Retrieval ----------------------------------------------------------
     top_k: int = 5                 # how many results a query retrieves
-
-    # Chunking is OFF by default: ingest indexes one vector per page (see
-    # app/rag/chunking.py). When you implement real chunking, these are your dials.
-    chunk_size: int = 800          # characters per chunk (once you chunk)
-    chunk_overlap: int = 150       # characters shared between neighbours
 
     # --- Data folders -------------------------------------------------------
     in_dir: str = "data/in"        # put the PDF here; /ingest reads from it
