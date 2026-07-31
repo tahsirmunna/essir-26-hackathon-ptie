@@ -110,13 +110,34 @@ SYSTEM_PROMPT = (
     "Be specific and concise. Answer plainly without any special formatting, lists, or bullet points. "
 )
 
+# Level 3 only: gemma4:e4b (and most locally-hosted chat models) has no built-in
+# thinking mode, so explicit reasoning is elicited via prompting instead — cheaper
+# than a dedicated reasoning model and the <think> block is stripped before the answer
+# is used for citations/memory/the response, so it never leaks into what's graded.
+_LEVEL3_REASONING_INSTRUCTION = (
+    "For every query, you must first think step-by-step. "
+    "Enclose your internal reasoning process entirely within <think> and </think> tags. "
+    "After closing the </think> tag, provide your final, clear answer to the user."
+)
 
-def _build_messages(question: str, contexts: list[Context], history: list[Message]) -> list[Message]:
+_THINK_BLOCK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
+
+
+def _strip_think(text: str) -> str:
+    return _THINK_BLOCK_RE.sub("", text).strip()
+
+
+def _build_messages(
+    question: str, contexts: list[Context], history: list[Message], level: int
+) -> list[Message]:
     def _tag(c: Context) -> str:
         return f'[page {c.page}, section "{c.section}"]' if c.section else f"[page {c.page}]"
 
     context_block = "\n\n".join(f"{_tag(c)} {c.text}" for c in contexts) or "(no context retrieved)"
-    messages: list[Message] = [{"role": "system", "content": SYSTEM_PROMPT}]
+    system_content = SYSTEM_PROMPT
+    if level == 3:
+        system_content += "\n\n" + _LEVEL3_REASONING_INSTRUCTION
+    messages: list[Message] = [{"role": "system", "content": system_content}]
     # Prior turns give the model the conversation so far (Level 2). Retrieval still
     # needs the rewritten query — history in the prompt is necessary but not sufficient.
     messages.extend(history)
@@ -167,7 +188,7 @@ def answer(req: QueryRequest) -> QueryResponse:
         gap_query = _find_gap_query(req.question, contexts)
         if gap_query:
             contexts = dedupe_contexts(contexts + retrieve(gap_query, top_k, level=1))
-    messages = _build_messages(req.question, contexts, history)
+    messages = _build_messages(req.question, contexts, history, req.level)
 
     try:
         answer_text = client.chat(messages)
@@ -178,6 +199,12 @@ def answer(req: QueryRequest) -> QueryResponse:
             f"[LLM unavailable: {e}] Retrieved context is attached as sources; "
             "no generated answer."
         )
+
+    if req.level == 3:
+        # Strip the reasoning trace before it reaches citations, memory or the graded
+        # response — <think> content is scratch, not the answer, and mixing it into
+        # the word-overlap citation match would pick the wrong sentence.
+        answer_text = _strip_think(answer_text)
 
     memory.append(conversation_id, req.question, answer_text)
     latency_ms = int((time.perf_counter() - started) * 1000)
