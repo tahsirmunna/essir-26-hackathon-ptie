@@ -1,4 +1,4 @@
-# The Fourth Turn
+# The Fourth Turn - TEAM PTIE
 
 A hackathon by the **[AI Multimedia Lab](https://aimultimedialab.ro/)** at
 **[ESSIR 2026](https://2026.essir.eu/)** — the European Summer School in Information Retrieval,
