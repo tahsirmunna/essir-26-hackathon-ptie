@@ -1,7 +1,9 @@
 {
-  "team_name": "",
+  "team_name": "ESSIR-PTIE",
   "members": [
-    { "name": "", "email": "" }
+    { "name": "Quang Linh Tran", "email": "Quang-linh.tran2@mail.dcu" },
+    { "name": "Tahsir Ahmed Munna", "email": "tahsir.a.munna@inesctec.pt" },
+    { "name": "- Luke Bastin", "email": "luke_bastin@hotmail.com" }
   ],
-  "repo_url": ""
+  "repo_url": "https://github.com/tahsirmunna/essir-26-hackathon-ptie"
 }
