@@ -27,6 +27,7 @@ class VectorStore:
         self.client = QdrantClient(url=url)
         self.collection = collection
         self._bm25_cache: tuple[object, dict[str, int]] | None = None
+        self._sections_cache: list[str] | None = None
 
     # --- inspection ---------------------------------------------------------
     def list_collections(self) -> list[str]:
@@ -57,10 +58,12 @@ class VectorStore:
             # A payload index on `page` would let searches be scoped/filtered (only the
             # references section, only tables, ...) — see client.create_payload_index(...).
         self._bm25_cache = None
+        self._sections_cache = None
 
     def upsert(self, points: list[models.PointStruct]) -> None:
         self.client.upsert(collection_name=self.collection, points=points)
         self._bm25_cache = None  # payload text changed; rebuild the lexical index lazily
+        self._sections_cache = None
 
     # --- read ---------------------------------------------------------------
     def _bm25(self) -> tuple[object | None, dict[str, int]]:
@@ -132,6 +135,49 @@ class VectorStore:
             enumerate(dense_hits), key=lambda pair: fused_score(*pair), reverse=True
         )
         return [hit for _, hit in reranked[:top_k]]
+
+    # --- structure (Level 3: whole-document coverage) ------------------------
+    def list_sections(self) -> list[str]:
+        """Every distinct section name in the collection, cached like `_bm25()`.
+
+        Backs the level-3 "one chunk per section" coverage pass — a document-structure
+        lookup, not a ranked search, so it lives next to `search()` rather than in it.
+        """
+        if self._sections_cache is not None:
+            return self._sections_cache
+
+        names: set[str] = set()
+        offset = None
+        while True:
+            points, offset = self.client.scroll(
+                collection_name=self.collection,
+                limit=256,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False,
+            )
+            for p in points:
+                section = (p.payload or {}).get("section")
+                if section:
+                    names.add(str(section))
+            if offset is None:
+                break
+
+        self._sections_cache = sorted(names)
+        return self._sections_cache
+
+    def points_for_section(self, section: str, limit: int = 1) -> list[dict]:
+        """Payloads of the first `limit` chunks filed under an exact section name."""
+        points, _ = self.client.scroll(
+            collection_name=self.collection,
+            scroll_filter=models.Filter(
+                must=[models.FieldCondition(key="section", match=models.MatchValue(value=section))]
+            ),
+            limit=limit,
+            with_payload=True,
+            with_vectors=False,
+        )
+        return [p.payload or {} for p in points]
 
 
 @lru_cache

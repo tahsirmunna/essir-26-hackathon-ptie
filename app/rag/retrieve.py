@@ -18,6 +18,20 @@ class Context:
     section: str | None = None
 
 
+def dedupe_contexts(contexts: list[Context]) -> list[Context]:
+    """Merge context lists, keeping the highest score per (page, text) pair.
+
+    Used both internally (fusing hits from several sub-queries) and by the pipeline's
+    level-3 gap-check, which retrieves one more batch of context after the first pass.
+    """
+    best: dict[tuple[int, str], Context] = {}
+    for c in contexts:
+        key = (c.page, c.text[:80])
+        if key not in best or c.score > best[key].score:
+            best[key] = c
+    return sorted(best.values(), key=lambda c: c.score, reverse=True)
+
+
 _REWRITE_PROMPT = (
     "You rewrite follow-up questions into standalone search queries for a document "
     "retrieval system.\n\n"
@@ -53,21 +67,61 @@ def rewrite_query(question: str, history: list[Message]) -> str:
     return rewritten or question
 
 
-def retrieve(question: str, top_k: int, history: list[Message] | None = None) -> list[Context]:
+_DECOMPOSE_PROMPT = (
+    "You break a question about a single document into focused search queries for a "
+    "retrieval system over that document.\n\n"
+    "Question: {question}\n\n"
+    "If the question is answerable from one self-contained search, output just that one "
+    "query, unchanged. Otherwise — a multi-hop question that chains facts from different "
+    "parts of the document, or one that needs a value from a table combined with a "
+    "statement elsewhere — break it into 2 to 4 sub-queries that together cover every "
+    "fact it needs, one per line. Output only the queries, one per line, no numbering, "
+    "no explanation."
+)
+
+_MAX_SUBQUERIES = 4
+
+# Whole-document synthesis ("summarise every section") needs a chunk from every section,
+# not just the ones a query happens to rank highest — no amount of query rewriting fixes
+# that, since it isn't a retrieval-ranking problem.
+_FULL_COVERAGE_HINTS = (
+    "each section", "every section", "each chapter", "every chapter",
+    "whole document", "entire document", "throughout the document",
+    "summarise the document", "summarize the document",
+    "across the document", "contribution of each",
+)
+
+
+def decompose_query(question: str) -> list[str]:
+    """Break a whole-document question into the sub-queries it actually needs.
+
+    A single embed+search finds the passage closest to the question as a whole, but a
+    multi-hop question ("how does X, introduced on p.4, relate to Y in the results
+    table on p.20?") needs two different passages that individually rank far apart.
+    Decomposing into separate, focused sub-queries and searching each one lets both
+    surface, instead of one drowning out the other in a single ranked list.
+    """
+    try:
+        raw = get_client().chat([{"role": "user", "content": _DECOMPOSE_PROMPT.format(question=question)}])
+    except LLMError:
+        return [question]
+
+    queries = [q.strip(" \t-•").lstrip("0123456789.) ") for q in raw.splitlines()]
+    queries = [q for q in queries if q]
+    return queries[:_MAX_SUBQUERIES] or [question]
+
+
+def _wants_full_coverage(question: str) -> bool:
+    q = question.lower()
+    return any(hint in q for hint in _FULL_COVERAGE_HINTS)
+
+
+def _search(query_text: str, top_k: int) -> list[Context]:
     embedder = get_embedder()
     store = get_store()
-
-    query = rewrite_query(question, history or [])
-
-    # TODO(level-3): one query + one search is not enough for whole-document
-    #   questions ("summarise every chapter", "combine the table on p.40 with the
-    #   reference on p.90"). Consider multi-query fan-out, iterative/agentic retrieval
-    #   (retrieve -> reason -> retrieve again), or a second index (e.g. a graph or a
-    #   per-section summary index) alongside this one.
-    vector = embedder.embed([query], is_query=True)[0]
+    vector = embedder.embed([query_text], is_query=True)[0]
     # query_text enables the BM25 fusion pass in VectorStore.search (hybrid retrieval).
-    hits = store.search(vector, top_k, query_text=query)
-
+    hits = store.search(vector, top_k, query_text=query_text)
     return [
         Context(
             text=str(h.payload.get("text", "")),
@@ -77,3 +131,42 @@ def retrieve(question: str, top_k: int, history: list[Message] | None = None) ->
         )
         for h in hits
     ]
+
+
+def _section_coverage(question: str) -> list[Context]:
+    """One real chunk per document section, fetched by exact structural match rather
+    than a ranked search — the "second index" for questions no ranking can serve."""
+    if not _wants_full_coverage(question):
+        return []
+    store = get_store()
+    out: list[Context] = []
+    for name in store.list_sections():
+        for payload in store.points_for_section(name, limit=1):
+            out.append(
+                Context(
+                    text=str(payload.get("text", "")),
+                    page=int(payload.get("page", 0)),
+                    score=0.0,
+                    section=name,
+                )
+            )
+    return out
+
+
+def retrieve(
+    question: str, top_k: int, history: list[Message] | None = None, level: int = 1
+) -> list[Context]:
+    query = rewrite_query(question, history or [])
+
+    if level != 3:
+        return _search(query, top_k)
+
+    # Level 3: fan out over decomposed sub-queries (multi-hop / table+text questions),
+    # then backfill one chunk per section for whole-document synthesis questions —
+    # neither is served by a single embed + single search.
+    queries = decompose_query(query)
+    contexts = dedupe_contexts([c for q in queries for c in _search(q, top_k)])
+    contexts = dedupe_contexts(contexts + _section_coverage(question))
+
+    limit = 20 if _wants_full_coverage(question) else min(max(len(contexts), top_k), 12)
+    return contexts[:limit]

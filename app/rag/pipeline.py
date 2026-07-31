@@ -20,7 +20,7 @@ from ..llm.base import LLMError, Message
 from ..llm.factory import get_client
 from ..models import Diagnostics, QueryRequest, QueryResponse, Source
 from . import memory
-from .retrieve import Context, retrieve
+from .retrieve import Context, dedupe_contexts, retrieve
 
 _WORD_RE = re.compile(r"[a-zA-Z0-9]+")
 _SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
@@ -60,6 +60,40 @@ def _best_supporting_sentence(chunk_text: str, answer_text: str, question: str) 
             best_sentence, best_score = sentence, score
 
     return best_sentence if best_score > 0 else chunk_text.strip()
+
+
+_GAP_CHECK_PROMPT = (
+    "You check whether retrieved context is enough to answer a whole-document question, "
+    "or whether one more targeted search would fill a real gap — this kind of question "
+    "often needs evidence from more than one part of the document.\n\n"
+    "Context retrieved so far:\n{context}\n\n"
+    "Question: {question}\n\n"
+    "If this context already covers everything the question needs, reply with exactly: "
+    "ENOUGH\n"
+    "Otherwise, reply with exactly one focused search query for the single most "
+    "important missing piece — nothing else, no explanation."
+)
+
+
+def _find_gap_query(question: str, contexts: list[Context]) -> str | None:
+    """One bounded retrieve-reason-retrieve hop for level 3: ask the model whether the
+    first retrieval pass left a gap, and if so, what to search for next.
+
+    Deliberately a single hop, not an open-ended loop — enough to catch the common case
+    (decomposition missed a fact) without turning every level-3 answer into an
+    unbounded, slow agent loop.
+    """
+    if not contexts:
+        return None
+    block = "\n\n".join(f"[page {c.page}] {c.text[:400]}" for c in contexts)
+    prompt = _GAP_CHECK_PROMPT.format(context=block, question=question)
+    try:
+        reply = get_client().chat([{"role": "user", "content": prompt}]).strip()
+    except LLMError:
+        return None
+    if not reply or reply.upper().startswith("ENOUGH"):
+        return None
+    return reply
 
 
 SYSTEM_PROMPT = (
@@ -128,7 +162,11 @@ def answer(req: QueryRequest) -> QueryResponse:
     now = datetime.now(UTC)
     started = time.perf_counter()
 
-    contexts = retrieve(req.question, top_k, history)
+    contexts = retrieve(req.question, top_k, history, level=req.level)
+    if req.level == 3:
+        gap_query = _find_gap_query(req.question, contexts)
+        if gap_query:
+            contexts = dedupe_contexts(contexts + retrieve(gap_query, top_k, level=1))
     messages = _build_messages(req.question, contexts, history)
 
     try:
