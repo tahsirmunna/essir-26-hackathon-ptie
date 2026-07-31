@@ -187,18 +187,33 @@
     text-align: center;
     color: var(--main-muted);
   }
-  .empty-state .big-dot {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
+  .empty-state .logo-mark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+  .empty-state .logo-mark .logo-dot-lg {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
     background: var(--accent);
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 18px;
-    margin-bottom: 16px;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .empty-state .logo-mark .logo-text {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--main-text);
+  }
+  .empty-state .logo-mark .logo-text span {
+    color: var(--accent);
   }
   .empty-state h2 {
     font-size: 18px;
@@ -592,7 +607,10 @@
   <div class="chat-scroll" id="chatScroll">
     <div class="chat-inner" id="chatInner">
       <div class="empty-state" id="emptyState">
-        <div class="big-dot">P</div>
+        <div class="logo-mark">
+          <div class="logo-dot-lg">P</div>
+          <div class="logo-text">TEAM <span>PTIE</span></div>
+        </div>
         <h2>Ask anything about the document</h2>
         <p>Pick a level on the left, type a question below, and PTIE will answer it grounded in your PDF.</p>
       </div>
@@ -635,7 +653,7 @@
 
   // Set this to where your backend serves the PDF, e.g. via a StaticFiles mount.
   // Leave as '' if you haven't set that up yet — source page numbers will show as plain text.
-  const PDF_URL = 'https://github.com/tahsirmunna/essir-26-hackathon-ptie/blob/main/data/in/paper.pdf';
+  const PDF_URL = 'https://raw.githubusercontent.com/tahsirmunna/essir-26-hackathon-ptie/main/data/in/paper.pdf';
 
   let currentLevel = 1;
   const SESSION_KEY = 'ptie_chat_session';
@@ -650,21 +668,22 @@
 
   function saveSession() {
     try {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+      localStorage.setItem(SESSION_KEY, JSON.stringify({
         level: currentLevel,
         messages: sessionMessages
       }));
     } catch (e) {
-      // sessionStorage unavailable or full — chat still works, just won't persist
+      console.warn('Could not save chat history:', e);
     }
   }
 
   function loadSession() {
     let saved = null;
     try {
-      const raw = sessionStorage.getItem(SESSION_KEY);
+      const raw = localStorage.getItem(SESSION_KEY);
       if (raw) saved = JSON.parse(raw);
     } catch (e) {
+      console.warn('Could not load chat history:', e);
       return;
     }
     if (!saved || !Array.isArray(saved.messages) || saved.messages.length === 0) return;
@@ -702,7 +721,7 @@
     const div = document.createElement('div');
     div.className = 'empty-state';
     div.id = 'emptyState';
-    div.innerHTML = '<div class="big-dot">P</div><h2>Ask anything about the document</h2><p>Pick a level on the left, type a question below, and PTIE will answer it grounded in your PDF.</p>';
+    div.innerHTML = '<div class="logo-mark"><div class="logo-dot-lg">P</div><div class="logo-text">TEAM <span>PTIE</span></div></div><h2>Ask anything about the document</h2><p>Pick a level on the left, type a question below, and PTIE will answer it grounded in your PDF.</p>';
     chatInner.appendChild(div);
   }
 
