@@ -1,1 +1,68 @@
-{}
+{
+  "question_id": "q84f8df",
+  "level": 2,
+  "question": "How is that different from the retriever?",
+  "answer": "The retriever emphasizes balancing efficiency and effectiveness while serving as a first-pass document filter to gather broadly relevant documents for user queries [page 12, section \"4 Retriever\", page 5, section \"2.1 IR\"]. In contrast, the reranker module focuses on the fine-grained reordering of documents within the set that has already been retrieved [page 5, section \"2.1 IR.\"], and it places a greater emphasis on the quality of document ranking rather than efficiency [page 5, section \"2.1 IR.\"].",
+  "conversation_id": "level-2",
+  "sources": [
+    {
+      "page": 9,
+      "quote": "[118] introduce a two-round query rewriting process, which first generates a set of high-quality seed keywords, then utilizes these keywords to enhance the query.",
+      "score": 0.8844
+    },
+    {
+      "page": 12,
+      "quote": "In an IR system, the retriever serves as the first-pass document filter to collect broadly relevant documents for user queries.",
+      "score": 0.8465
+    },
+    {
+      "page": 9,
+      "quote": "The utilization of LLMs in query rewriting can be categorized into three primary methodologies: prompting, supervised fine-tuning (SFT), and reinforcement learning (RL).",
+      "score": 0.8343
+    },
+    {
+      "page": 8,
+      "quote": "The intended format for rewritten queries can vary widely based on the specific needs and the downstream retrieval system.",
+      "score": 0.8404
+    },
+    {
+      "page": 33,
+      "quote": "While yielding remarkable results, the refinement of rewriting quality and the exploration of potential application scenarios require further investigation.",
+      "score": 0.8363
+    },
+    {
+      "page": 2,
+      "quote": "In contrast to the retrieval stage, reranking is performed only on a limited set of relevant documents, already retrieved by the retriever.",
+      "score": 0.8485
+    },
+    {
+      "page": 5,
+      "quote": "Different from the retriever, which emphasizes the balance of efficiency and effectiveness, the reranker module places a greater emphasis on the quality of document ranking.",
+      "score": 0.8418
+    },
+    {
+      "page": 8,
+      "quote": "“SFT” and “RL” denote supervised fine-tuning and reinforcement learning, respectively.",
+      "score": 0.843
+    },
+    {
+      "page": 10,
+      "quote": "In the following section, we will introduce these three methods in detail.",
+      "score": 0.8335
+    },
+    {
+      "page": 9,
+      "quote": "These detailed answers are then employed to retrieve relevant passages from the corpus, thereby effectively bridging the semantic divide between short queries and long candidate documents.",
+      "score": 0.836
+    }
+  ],
+  "diagnostics": {
+    "provider": "ollama",
+    "chat_model": "gemma4:e4b",
+    "embedding_model": "intfloat/multilingual-e5-large",
+    "retrieved_chunks": 10,
+    "tokens": null,
+    "latency_ms": 11874,
+    "timestamp": "2026-07-31T07:17:53Z"
+  }
+} 

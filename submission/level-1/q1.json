@@ -1,1 +1,68 @@
-{}
+{
+  "question_id": "q563b9c",
+  "level": 1,
+  "question": "What is the purpose of the reranker?",
+  "answer": "The reranker serves as a second-pass document filter in Information Retrieval (IR) that aims to re-rank a document list retrieved by the retriever based on the query-document relevance [page 19, section \"5 Reranker\"]. Its primary focus is on the fine-grained reordering of documents within the retrieved set, placing a greater emphasis on the quality of document ranking [page 5, section \"2.1 IR\"]. Reranking approaches are developed to further adjust the document ranking, and unlike the retrieval stage, the reranking stage places emphasis on achieving higher performance rather than higher efficiency [page 2, section \"1 Introduction\"]. Furthermore, the reranker can deliver tailored and purposeful search results by integrating domain-specific objectives, and it can also accommodate specific requirements such as personalization and diversification [page 5, section \"2.1 IR\"] [page 2, section \"1 Introduction\"].",
+  "conversation_id": "level-1",
+  "sources": [
+    {
+      "page": 5,
+      "quote": "Reranker, as another crucial module in the retrieval pipeline, primarily focuses on fine-grained reordering of documents within the retrieved document set.",
+      "score": 0.8731
+    },
+    {
+      "page": 23,
+      "quote": "The core component of DemoRank is a dependency-aware demonstration reranker, which reranks a list of demonstrations (usually obtained by a demonstration retriever) so that the combination of top-ranked demonstrations can yield better performance.",
+      "score": 0.8382
+    },
+    {
+      "page": 21,
+      "quote": "It jointly takes multiple documents as input and directly generates a reranked document list during training and inference.",
+      "score": 0.8473
+    },
+    {
+      "page": 23,
+      "quote": "[189] propose a parallelizable partitioning algorithm for listwise ranking, which also aims at mitigating efficiency issues.",
+      "score": 0.8316
+    },
+    {
+      "page": 20,
+      "quote": "For example, RankT5 [310] is proposed to directly yield a numerical relevance score for each query-document pair during training and optimize the ranking performance with “pairwise” or “listwise” ranking losses.",
+      "score": 0.8363
+    },
+    {
+      "page": 21,
+      "quote": "Besides, TSARankLLM [294] has been proposed to bridge the gap between LLMs’ conventional training objectives and the specific needs of document ranking through two-stage training.",
+      "score": 0.8339
+    },
+    {
+      "page": 19,
+      "quote": "Reranker, as the second-pass document filter in IR, aims to rerank a document list retrieved by the retriever (e.g., BM25) based on the query-document relevance.",
+      "score": 0.8689
+    },
+    {
+      "page": 4,
+      "quote": "Sections 3–6 review recent progress from the four perspectives of query rewriter, retriever, reranker, and reader, which are four key components of an IR system.",
+      "score": 0.8157
+    },
+    {
+      "page": 2,
+      "quote": "Under this circumstance, the emphasis is placed on achieving higher performance rather than keeping higher efficiency, allowing for the application of more complex approaches in the reranking process.",
+      "score": 0.8266
+    },
+    {
+      "page": 20,
+      "quote": "Specifically, given the query and the document, reranking models are usually fine-tuned to generate a single token, such as “true” or “false.” During inference, the query-document relevance score is determined based on the logit of the generated token.",
+      "score": 0.8295
+    }
+  ],
+  "diagnostics": {
+    "provider": "ollama",
+    "chat_model": "gemma4:e4b",
+    "embedding_model": "intfloat/multilingual-e5-large",
+    "retrieved_chunks": 10,
+    "tokens": null,
+    "latency_ms": 20479,
+    "timestamp": "2026-07-31T07:13:51Z"
+  }
+}

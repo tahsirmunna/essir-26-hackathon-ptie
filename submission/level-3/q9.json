@@ -1,1 +1,78 @@
-{}
+{
+  "question_id": "q2e1112",
+  "level": 3,
+  "question": "How do Large Language Models contribute differently to conversational search than they do to ad-hoc search?",
+  "answer": "LLMs contribute to conversational search in several ways that distinguish it from ad-hoc search. Conversational search is described as having a broader scope and more developed landscape for LLMs, allowing them to adapt system responses based on user preferences for a more effective experience [page 33, section \"8.1 Query Rewriter\"]. Specifically, conversational query rewriters must address coreference resolution and refine a query using the context of historical dialogues [page 8, section \"3.1 Rewriting Scenarios\"]. Furthermore, LLMs can simulate user behavior in conversational scenarios to generate necessary training data [page 33, section \"8.1 Query Rewriter\"]. In contrast, while LLMs enhance ad-hoc query rewriting [page 33, section \"8.1 Query Rewriter\"], they are also capable of leveraging user-specific data to build user profiles based on search histories, such as click-through behaviors, which is a function particularly relevant to enhancing personalized search in the conversational context [page 33, section \"8.1 Query Rewriter\"].",
+  "conversation_id": "level-3",
+  "sources": [
+    {
+      "page": 33,
+      "quote": "By incorporating historical interactive information, LLMs can adapt system responses based on user preferences, providing a more effective conversational experience.",
+      "score": 0.8923
+    },
+    {
+      "page": 33,
+      "quote": "LLMs have enhanced query rewriter for both ad-hoc and conversational search scenarios.",
+      "score": 0.8908
+    },
+    {
+      "page": 12,
+      "quote": "An example of LLM-based query rewriter for conversational search (cited from LLMCS [160]).",
+      "score": 0.8864
+    },
+    {
+      "page": 8,
+      "quote": "For conversational search, query rewriters aim to refine a query within a conversation’s con- text, transforming it into isolated queries based on historical dialogues.",
+      "score": 0.8849
+    },
+    {
+      "page": 9,
+      "quote": "An example of LLM-based query rewriter for ad-hoc search.",
+      "score": 0.8811
+    },
+    {
+      "page": 34,
+      "quote": "However, by incorporating user-specific information, LLMs can also improve the effectiveness of the personalized reranking task.",
+      "score": 0.8786
+    },
+    {
+      "page": 37,
+      "quote": "As this field continues to progress, the journey of LLMs in IR portends a future characterized by more personalized, precise, and user-centric search encounters.",
+      "score": 0.87
+    },
+    {
+      "page": 33,
+      "quote": "In terms of query rewriter, with the excellent language comprehension ability of LLMs, it is possible to leverage them to build user profiles based on users’ search histories (e.g., issued queries, click-through behaviors, and dwell time).",
+      "score": 0.8639
+    },
+    {
+      "page": 13,
+      "quote": "In the field of IR, a key research focus lies in devising strategies to leverage LLMs’ capabilities to generate pseudo-relevant signals and augment the search dataset for the retrieval task.",
+      "score": 0.8623
+    },
+    {
+      "page": 13,
+      "quote": "The second perspective involves data augmentation methods, which leverage LLMs’ generation ability to enlarge the training or evaluation data for dense retrieval models, particularly in zero- or few-shot scenarios.",
+      "score": 0.8601
+    },
+    {
+      "page": 7,
+      "quote": "This allows LLMs to perform robustly in specialized fields such as legal or medical search with minimal fine-tuning.",
+      "score": 0.8536
+    },
+    {
+      "page": 41,
+      "quote": "A deep relevance matching model for ad-hoc retrieval.",
+      "score": 0.8528
+    }
+  ],
+  "diagnostics": {
+    "provider": "ollama",
+    "chat_model": "gemma4:e4b",
+    "embedding_model": "intfloat/multilingual-e5-large",
+    "retrieved_chunks": 12,
+    "tokens": null,
+    "latency_ms": 34058,
+    "timestamp": "2026-07-31T07:24:45Z"
+  }
+}

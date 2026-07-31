@@ -1,1 +1,68 @@
-{}
+{
+  "question_id": "qe04e32",
+  "level": 2,
+  "question": "Which of those works particularly well with sparse retrievers?",
+  "answer": "Rewriting queries into keywords is noted as being particularly effective when the downstream retriever is a sparse retriever [page 9, section \"3.2.2 Keywords.\"]. Specific examples include BEQUE, which formulates new queries as keywords for effective product searches, and Li et al., who introduced a two-round query rewriting process that generates seed keywords before using them to enhance the query [page 9, section \"3.2.2 Keywords.\"].",
+  "conversation_id": "level-2",
+  "sources": [
+    {
+      "page": 34,
+      "quote": "—Reducing the latency of LLM-based retrievers. LLMs, with their massive parameters and world",
+      "score": 0.8295
+    },
+    {
+      "page": 9,
+      "quote": "Rewriting queries into keywords proves particularly effective when the downstream retriever is a sparse retriever.",
+      "score": 0.8149
+    },
+    {
+      "page": 18,
+      "quote": "Another advantage of LLM-based embedders is their length-generalizable capacity, which allows them to effectively handle much longer texts than those in their training examples [145].",
+      "score": 0.817
+    },
+    {
+      "page": 17,
+      "quote": "For readers unfamiliar with dense retrievers, we recommend a recent survey [297] that thoroughly reviews studies on dense retrieval using PLMs, offering valuable background knowledge for this section.",
+      "score": 0.8196
+    },
+    {
+      "page": 18,
+      "quote": "To ensure the output DocIDs are valid and do represent actual documents in the corpus, DSI constructs a trie using all DocIDs and utilizes a constraint beam search during the decoding process.",
+      "score": 0.8186
+    },
+    {
+      "page": 19,
+      "quote": "To provide a comprehensive understanding of this topic, Table 5 summarizes the common and unique characteristics of the LLM-based retrievers discussed above.",
+      "score": 0.8019
+    },
+    {
+      "page": 17,
+      "quote": "For example, Llama2Vec [113] performs post pre-training of LLaMA-2 with two new pretext tasks: embedding based auto-encoding and embedding based auto-regression.",
+      "score": 0.794
+    },
+    {
+      "page": 45,
+      "quote": "cation using causal language models.",
+      "score": 0.8024
+    },
+    {
+      "page": 15,
+      "quote": "To enhance the diversity of generated examples, Gecko [107] prompts LLMs to first generate a task description, and then generate pseudo queries according to the task.",
+      "score": 0.7955
+    },
+    {
+      "page": 13,
+      "quote": "architecture allows retrievers to effectively store and apply knowledge obtained from the training data.",
+      "score": 0.8148
+    }
+  ],
+  "diagnostics": {
+    "provider": "ollama",
+    "chat_model": "gemma4:e4b",
+    "embedding_model": "intfloat/multilingual-e5-large",
+    "retrieved_chunks": 10,
+    "tokens": null,
+    "latency_ms": 9370,
+    "timestamp": "2026-07-31T07:16:10Z"
+  }
+}

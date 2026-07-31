@@ -1,1 +1,68 @@
-{}
+{
+  "question_id": "qd58002",
+  "level": 1,
+  "question": "What formats can rewritten queries take?",
+  "answer": "Rewritten queries can typically take the formats of questions, keywords, and answer-incorporated passages [page 8, section \"3.2 Formats of Rewritten Queries\"] or [page 8, section \"3.1 Rewriting Scenarios\"].",
+  "conversation_id": "level-1",
+  "sources": [
+    {
+      "page": 8,
+      "quote": "Typically, the formats include questions, keywords, and answer-incorporated passages.",
+      "score": 0.881
+    },
+    {
+      "page": 8,
+      "quote": "By leveraging the capabilities of LLMs, researchers have been able to generate a variety of formats for rewritten queries, such as questions [6, 48, 79, 149, 160, 162, 283], answer-incorporated passages [7, 15, 44, 56, 62, 84, 154, 226, 256], and keywords [117, 149, 153, 192].",
+      "score": 0.8636
+    },
+    {
+      "page": 8,
+      "quote": "Rewriting original queries into similar form questions are a natural idea of query rewriting [6, 162, 283].",
+      "score": 0.8578
+    },
+    {
+      "page": 33,
+      "quote": "The absence of this connection can result in rewritten queries that seem correct yet produce unsatisfactory ranking results.",
+      "score": 0.836
+    },
+    {
+      "page": 33,
+      "quote": "—Rewriting queries according to ranking performance.",
+      "score": 0.8409
+    },
+    {
+      "page": 6,
+      "quote": "Query rewriter, functioning as an essential pre-processing component for search engines, increases the accuracy of retrieval systems through the refinement of initial queries [14].",
+      "score": 0.8305
+    },
+    {
+      "page": 9,
+      "quote": "Rewriting queries into keywords proves particularly effective when the downstream retriever is a sparse retriever.",
+      "score": 0.8142
+    },
+    {
+      "page": 33,
+      "quote": "While yielding remarkable results, the refinement of rewriting quality and the exploration of potential application scenarios require further investigation.",
+      "score": 0.8387
+    },
+    {
+      "page": 9,
+      "quote": "The prompt employed for this mechanism is typically structured as follows: “Given a question query and its potential answer passages, compose a passage that provides an answer to the question” [56, 226].",
+      "score": 0.83
+    },
+    {
+      "page": 7,
+      "quote": "search evolves, query rewriters have evolved to interpret user intent and previous dialogues, thereby enabling context-sensitive queries.",
+      "score": 0.8278
+    }
+  ],
+  "diagnostics": {
+    "provider": "ollama",
+    "chat_model": "gemma4:e4b",
+    "embedding_model": "intfloat/multilingual-e5-large",
+    "retrieved_chunks": 10,
+    "tokens": null,
+    "latency_ms": 8452,
+    "timestamp": "2026-07-31T07:14:59Z"
+  }
+}

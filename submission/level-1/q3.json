@@ -1,1 +1,68 @@
-{}
+{
+  "question_id": "q157ed4",
+  "level": 1,
+  "question": "What are search agents?",
+  "answer": "Search agents are novel, LLM-driven search models that simulate an automated search and result understanding process to provide users with answers that are readily comprehensible and accurate [page 5, section \"2.1 IR\"]. These agents are conceptualized as intelligent agents that adopt a pattern mimicking human browsing and can autonomously search, interpret, and synthesize information from various sources, thereby enhancing their capacity for complex retrieval tasks [page 30, section \"7 Search Agent\"]; [page 35, section \"8.5 Search Agent\"]. WebGPT is noted as a pioneering example in this field, modeling the search process as a sequence of actions performed by an LLM-based agent within a search engine environment, thereby autonomously completing the entire search pipeline [page 5, section \"2.1 IR\"].",
+  "conversation_id": "level-1",
+  "sources": [
+    {
+      "page": 33,
+      "quote": "Though the aspect of static search agents has been thoroughly studied, the literature on dynamic search agents remains limited.",
+      "score": 0.8034
+    },
+    {
+      "page": 5,
+      "quote": "WebGPT [176] serves as a pioneering work in this category, which models the search process as a sequence of actions of an LLM-based agent within a search engine environment, autonomously accomplishing the whole search pipeline.",
+      "score": 0.8445
+    },
+    {
+      "page": 30,
+      "quote": "This conceptual shift aims to mimic human browsing patterns, thereby enhancing the capability of these models to handle complex retrieval tasks.",
+      "score": 0.7998
+    },
+    {
+      "page": 52,
+      "quote": "Enhancing conversational search: Large language",
+      "score": 0.7923
+    },
+    {
+      "page": 35,
+      "quote": "In Section 7, we have discussed many existing works that utilize a static or dynamic pipeline to autonomously browse the web.",
+      "score": 0.7922
+    },
+    {
+      "page": 4,
+      "quote": "Section 7 introduces recent studies of search agents.",
+      "score": 0.7873
+    },
+    {
+      "page": 53,
+      "quote": "WebArena: A realistic web environment for building autonomous agents.",
+      "score": 0.787
+    },
+    {
+      "page": 37,
+      "quote": "This survey focuses on reviewing recent studies of applying LLMs to different IR components and using LLMs as search agents.",
+      "score": 0.7905
+    },
+    {
+      "page": 50,
+      "quote": "Investigating large language models as re-ranking agents.",
+      "score": 0.7826
+    },
+    {
+      "page": 39,
+      "quote": "Internet of agents: Weaving a web of heterogeneous agents for collaborative intelligence.",
+      "score": 0.7819
+    }
+  ],
+  "diagnostics": {
+    "provider": "ollama",
+    "chat_model": "gemma4:e4b",
+    "embedding_model": "intfloat/multilingual-e5-large",
+    "retrieved_chunks": 10,
+    "tokens": null,
+    "latency_ms": 13981,
+    "timestamp": "2026-07-31T07:19:13Z"
+  }
+}

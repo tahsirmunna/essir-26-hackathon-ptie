@@ -1,1 +1,78 @@
-{}
+{
+  "question_id": "q46e6b5",
+  "level": 3,
+  "question": "Compare the roles of the retriever, reranker and reader in a modern Information Retrieval pipeline",
+  "answer": "The retriever functions as the first-pass filter in an IR system, collecting broadly relevant documents for user queries, where its efficiency and high recall are essential due to the enormous number of documents available [page 12, section \"4 Retriever\"; page 5, section \"2.1 IR\"]. Following this, the reranker acts as the second-pass filter, focusing on the fine-grained reordering of the collected documents by evaluating their query-document relevance, emphasizing the quality of the document ranking rather than efficiency [page 19, section \"5 Reranker\"; page 5, section \"2.1 IR\"]. Finally, the reader component summarizes the retrieved documents to generate and deliver a concise answer passage, thereby enhancing user comprehension and presenting an answer rather than just a list of documents [page 2, section \"1 Introduction\"; page 25, section \"6 Reader\"].",
+  "conversation_id": "level-3",
+  "sources": [
+    {
+      "page": 5,
+      "quote": "Reranker, as another crucial module in the retrieval pipeline, primarily focuses on fine-grained reordering of documents within the retrieved document set.",
+      "score": 0.898
+    },
+    {
+      "page": 12,
+      "quote": "In an IR system, the retriever serves as the first-pass document filter to collect broadly relevant documents for user queries.",
+      "score": 0.8849
+    },
+    {
+      "page": 19,
+      "quote": "Reranker, as the second-pass document filter in IR, aims to rerank a document list retrieved by the retriever (e.g., BM25) based on the query-document relevance.",
+      "score": 0.8779
+    },
+    {
+      "page": 2,
+      "quote": "Following the retrieval and reranking stages, a reading component is incorporated to summarize the retrieved documents and deliver a concise document to users [21, 176].",
+      "score": 0.8737
+    },
+    {
+      "page": 5,
+      "quote": "Query Rewriter is an essential IR module that seeks to improve the precision and expressiveness of user queries.",
+      "score": 0.8596
+    },
+    {
+      "page": 5,
+      "quote": "In comparison to presenting a list of candidate documents, the reader module organizes answer texts more intuitively, simulating the natural way humans access information.",
+      "score": 0.8555
+    },
+    {
+      "page": 21,
+      "quote": "It jointly takes multiple documents as input and directly generates a reranked document list during training and inference.",
+      "score": 0.8536
+    },
+    {
+      "page": 5,
+      "quote": "In the wake of the neural IR paradigm’s ascendancy, prevalent approaches have primarily revolved around projecting queries and documents into high-dimensional vector spaces, and subsequently computing their relevance scores through inner product calculations.",
+      "score": 0.8523
+    },
+    {
+      "page": 1,
+      "quote": "Meanwhile, the emergence of large language models (LLMs) has revolutionized natural language processing due to their remarkable language understanding, generation, and reasoning abilities.",
+      "score": 0.8516
+    },
+    {
+      "page": 25,
+      "quote": "In this evolution, a reader module has been introduced to generate answers based on the document corpus in IR systems.",
+      "score": 0.8508
+    },
+    {
+      "page": 21,
+      "quote": "The first stage involves continuously pre-training LLMs using a large number of relevant text pairs collected from web resources, helping the LLMs to naturally generate queries relevant to the input document.",
+      "score": 0.8467
+    },
+    {
+      "page": 35,
+      "quote": "Due to the powerful NLP and understanding capabilities of LLMs, the traditional search paradigm of providing ranking results is expected to be progressively replaced by synthesizing conclusive answering passages for user queries using the reader module.",
+      "score": 0.8428
+    }
+  ],
+  "diagnostics": {
+    "provider": "ollama",
+    "chat_model": "gemma4:e4b",
+    "embedding_model": "intfloat/multilingual-e5-large",
+    "retrieved_chunks": 12,
+    "tokens": null,
+    "latency_ms": 23268,
+    "timestamp": "2026-07-31T07:21:31Z"
+  }
+}

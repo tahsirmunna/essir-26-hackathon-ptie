@@ -1,1 +1,68 @@
-{}
+{
+  "question_id": "qe68120",
+  "level": 2,
+  "question": "How do they differ from conventional Information Retrieval systems?",
+  "answer": "Unlike traditional IR systems, which typically require users to gather and organize relevant information themselves, new IR systems incorporate a reading component to summarize retrieved documents and deliver a concise document to users, thereby improving users' browsing experience and saving valuable time [page 2, section \"1 Introduction\"]. More broadly, the field has evolved from term-based methods to integrating advanced neural models [page 1].",
+  "conversation_id": "level-2",
+  "sources": [
+    {
+      "page": 5,
+      "quote": "In pursuit of enhancing the search result quality, researchers delve into more complex matching methods than the traditional vector inner product, thereby furnishing richer matching signals to the reranker.",
+      "score": 0.8678
+    },
+    {
+      "page": 8,
+      "quote": "“Knowledge” denotes the source of information the method employs for query rewriting.",
+      "score": 0.8333
+    },
+    {
+      "page": 21,
+      "quote": "It jointly takes multiple documents as input and directly generates a reranked document list during training and inference.",
+      "score": 0.8482
+    },
+    {
+      "page": 21,
+      "quote": "Recently, there have been some attempts [133, 150, 194, 294, 295] to rerank documents by fine-tuning decoder-only models (such as LLaMA).",
+      "score": 0.834
+    },
+    {
+      "page": 2,
+      "quote": "While traditional IR systems typically require users to gather and organize relevant information themselves; however, the reading component is an integral part of new IR systems such as New Bing,4 improving users’ browsing experience and saving valuable time.",
+      "score": 0.8527
+    },
+    {
+      "page": 37,
+      "quote": "The integration of LLMs into IR systems has brought about a fundamental change in how users engage with information and knowledge.",
+      "score": 0.8354
+    },
+    {
+      "page": 9,
+      "quote": "For example, BEQUE [192] formulates new queries as keywords for effective product searches, and Li et al.",
+      "score": 0.8516
+    },
+    {
+      "page": 23,
+      "quote": "(2) The use of sliding windows limits the number of documents that can be ranked each time, and the dependency between adjacent windows prevents parallelization of LLM inference, thereby reducing the efficiency of reranking.",
+      "score": 0.8377
+    },
+    {
+      "page": 1,
+      "quote": "The trajectory of IR has evolved dynamically from its origins in term-based methods to its integration with advanced neural models.",
+      "score": 0.8238
+    },
+    {
+      "page": 11,
+      "quote": "Query rewriters typically serve as intermediaries for retrieval systems, implying that they do not operate independently, and there is no specific loss attributed solely to the query rewriting process.",
+      "score": 0.846
+    }
+  ],
+  "diagnostics": {
+    "provider": "ollama",
+    "chat_model": "gemma4:e4b",
+    "embedding_model": "intfloat/multilingual-e5-large",
+    "retrieved_chunks": 10,
+    "tokens": null,
+    "latency_ms": 9989,
+    "timestamp": "2026-07-31T07:19:54Z"
+  }
+}
