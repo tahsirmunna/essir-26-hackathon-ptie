@@ -1,1 +1,78 @@
-{}
+{
+  "question_id": "qe23152",
+  "level": 3,
+  "question": "How do prompting, supervised fine-tuning and reinforcement learning differ when used for query rewriting, and what advantages does each approach offer?",
+  "answer": "Prompting approaches use specific prompts to guide the LLM's output, providing flexibility and interpretability [page 9, section \"3.3 Approaches\"]. For zero-shot rewriting, the model uses its pre-existing knowledge to generate expanded terms without prior domain examples [page 10, section \"3.3.1 Prompting.\"].\n\nSupervised fine-tuning (SFT) techniques adapt pre-trained LLMs specifically for query rewriting [page 9, section \"3.3 Approaches\"]. This method requires an appropriate training dataset [page 10, section \"3.3.2 SFT.\"], and in the context of e-commerce search, dataset creation can be simplified by using data from a system's previous-generation rewriting policies [page 10, section \"3.3.2 SFT.\"].\n\nReinforcement learning (RL) improves performance by utilizing feedback signals from ranking models or downstream LLM readers [page 11, section \"3.3.3 RL.\"]. RL addresses the issue of scarce training data by incorporating feedback from downstream applications [page 10, section \"3.3 Approaches.\"], which aligns the objective of the query rewriter more closely with the goals of downstream tasks and enhances overall system performance [page 11, section \"3.3.3 RL.\"].",
+  "conversation_id": "level-3",
+  "sources": [
+    {
+      "page": 9,
+      "quote": "The utilization of LLMs in query rewriting can be categorized into three primary methodologies: prompting, supervised fine-tuning (SFT), and reinforcement learning (RL).",
+      "score": 0.9095
+    },
+    {
+      "page": 8,
+      "quote": "“SFT” and “RL” denote supervised fine-tuning and reinforcement learning, respectively.",
+      "score": 0.8793
+    },
+    {
+      "page": 10,
+      "quote": "Though prompting method is effective, LLMs are not naturally designed for query rewriting task.",
+      "score": 0.8726
+    },
+    {
+      "page": 33,
+      "quote": "—Rewriting queries according to ranking performance.",
+      "score": 0.8705
+    },
+    {
+      "page": 11,
+      "quote": "Such an application of RL mechanisms aligns the objective of query rewriters more closely with the goals of downstream tasks, thereby enhancing the overall performance of the system.",
+      "score": 0.869
+    },
+    {
+      "page": 33,
+      "quote": "LLMs have enhanced query rewriter for both ad-hoc and conversational search scenarios.",
+      "score": 0.8667
+    },
+    {
+      "page": 10,
+      "quote": "To address this issue, RL methods utilize feedback from downstream applications, thereby improving the performance of query rewriters.",
+      "score": 0.8666
+    },
+    {
+      "page": 10,
+      "quote": "This data, sourced from the previous-generation rewriting policies of the e-commerce system, significantly simplifies the construction of the SFT dataset [192].",
+      "score": 0.8633
+    },
+    {
+      "page": 8,
+      "quote": "Traditional query rewrit- ing methods, trained on limited data, have shown sub-optimal performance, as conversational search sessions tend to be diverse and long-tailed [41, 161].",
+      "score": 0.8543
+    },
+    {
+      "page": 10,
+      "quote": "The model relies on its pre-existing knowledge and language understanding to generate coherent and contextually relevant expanded terms for original queries.",
+      "score": 0.8513
+    },
+    {
+      "page": 22,
+      "quote": "Recently, research [311] has also shown that the LLMs that are pre-trained without any supervised instruction fine-tuning (such as LLaMA) also yield robust zero-shot ranking ability.",
+      "score": 0.8501
+    },
+    {
+      "page": 20,
+      "quote": "By fine-tuning LLMs on task-specific ranking datasets, such as the MS MARCO passage ranking dataset [178], which includes signals of both relevance and irrelevance, LLMs can adjust their parameters to yield better performance in the reranking tasks.",
+      "score": 0.8455
+    }
+  ],
+  "diagnostics": {
+    "provider": "ollama",
+    "chat_model": "gemma4:e4b",
+    "embedding_model": "intfloat/multilingual-e5-large",
+    "retrieved_chunks": 12,
+    "tokens": null,
+    "latency_ms": 28584,
+    "timestamp": "2026-07-31T07:23:46Z"
+  }
+}
