@@ -433,6 +433,21 @@
   .btn-cancel { background: #f0f0f0; color: var(--main-text); }
   .btn-save { background: var(--main-text); color: white; }
 
+  .menu-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--main-text);
+    flex-shrink: 0;
+  }
+  .menu-btn:hover { background: #f4f4f4; }
+
   @media (max-width: 700px) {
     .sidebar {
       position: fixed;
@@ -536,21 +551,6 @@
     .menu-btn { display: none; }
     .sidebar-backdrop { display: none; }
   }
-
-  .menu-btn {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    color: var(--main-text);
-    flex-shrink: 0;
-  }
-  .menu-btn:hover { background: #f4f4f4; }
 
 </style>
 </head>
