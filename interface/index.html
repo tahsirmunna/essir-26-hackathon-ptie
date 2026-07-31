@@ -476,6 +476,99 @@
   .btn-cancel { background: #f0f0f0; color: var(--main-text); }
   .btn-save { background: var(--main-text); color: white; }
 
+  /* ---------- PDF viewer modal ---------- */
+  .pdf-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 80;
+    align-items: center;
+    justify-content: center;
+  }
+  .pdf-overlay.open { display: flex; }
+  .pdf-modal {
+    background: #fff;
+    width: 92vw;
+    max-width: 900px;
+    height: 90vh;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .pdf-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+  .pdf-toolbar button {
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 7px;
+    padding: 5px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--main-text);
+  }
+  .pdf-toolbar button:hover:not(:disabled) { background: #f4f4f4; }
+  .pdf-toolbar button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .pdf-page-label { color: var(--main-muted); }
+  .pdf-toolbar .spacer { flex: 1; }
+  .pdf-close {
+    font-size: 18px !important;
+    line-height: 1;
+    padding: 4px 10px !important;
+  }
+  .pdf-scroll {
+    flex: 1;
+    overflow: auto;
+    background: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+  }
+  .pdf-page-wrap {
+    position: relative;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    height: fit-content;
+  }
+  .pdf-page-wrap canvas { display: block; }
+  .textLayer {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    line-height: 1;
+    z-index: 2;
+  }
+  .textLayer span {
+    color: transparent;
+    position: absolute;
+    white-space: pre;
+    cursor: text;
+    transform-origin: 0% 0%;
+  }
+  .textLayer span.pdf-hl {
+    background: rgba(255, 213, 0, 0.45);
+    border-radius: 2px;
+  }
+  .pdf-status {
+    padding: 8px 14px;
+    font-size: 12.5px;
+    color: var(--main-muted);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  @media (max-width: 700px) {
+    .pdf-modal { width: 100vw; height: 100vh; border-radius: 0; }
+    .pdf-toolbar { font-size: 12px; padding: 8px 10px; gap: 6px; }
+    .pdf-toolbar button { padding: 4px 8px; font-size: 12px; }
+  }
+
   .menu-btn {
     display: none;
     align-items: center;
@@ -672,6 +765,27 @@
   </div>
 </div>
 
+<div class="pdf-overlay" id="pdfOverlay">
+  <div class="pdf-modal">
+    <div class="pdf-toolbar">
+      <button id="pdfPrev" onclick="pdfGoto(pdfCurrentPage - 1)">‹ Prev</button>
+      <span class="pdf-page-label" id="pdfPageLabel">Page –</span>
+      <button id="pdfNext" onclick="pdfGoto(pdfCurrentPage + 1)">Next ›</button>
+      <span class="spacer"></span>
+      <a id="pdfRawLink" href="#" target="_blank" rel="noopener" style="font-size:12.5px;color:var(--accent);text-decoration:none;">Open full PDF ↗</a>
+      <button class="pdf-close" onclick="closePdf()" title="Close">×</button>
+    </div>
+    <div class="pdf-scroll" id="pdfScroll">
+      <div class="pdf-page-wrap" id="pdfPageWrap">
+        <canvas id="pdfCanvas"></canvas>
+        <div class="textLayer" id="pdfTextLayer"></div>
+      </div>
+    </div>
+    <div class="pdf-status" id="pdfStatus">Loading…</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
   const chatInner = document.getElementById('chatInner');
   const chatScroll = document.getElementById('chatScroll');
@@ -902,10 +1016,20 @@
         const scoreText = s.score !== undefined ? ` <span class="score">${s.score.toFixed(4)}</span>` : '';
         const quoteText = (s.quote || '').slice(0, 220) + ((s.quote || '').length > 220 ? '…' : '');
         const pageLabel = s.page !== undefined ? `Page ${s.page}` : 'Source';
-        const pdfLink = (s.page !== undefined && PDF_URL)
-          ? `<a href="${PDF_URL}#page=${s.page}" target="_blank" rel="noopener" class="source-link">${pageLabel} ↗</a>`
-          : pageLabel;
-        item.innerHTML = `${pdfLink}${scoreText}<br>${quoteText}`;
+
+        if (s.page !== undefined && PDF_URL) {
+          const link = document.createElement('a');
+          link.href = '#';
+          link.className = 'source-link';
+          link.textContent = pageLabel + ' ↗';
+          link.onclick = (e) => { e.preventDefault(); openPdf(s.page, s.quote || ''); };
+          item.appendChild(link);
+          const rest = document.createElement('span');
+          rest.innerHTML = scoreText + '<br>' + quoteText;
+          item.appendChild(rest);
+        } else {
+          item.innerHTML = `${pageLabel}${scoreText}<br>${quoteText}`;
+        }
         details.appendChild(item);
       });
       row.querySelector('.msg-body').appendChild(details);
@@ -996,6 +1120,160 @@
   });
 
   initApp();
+
+  // ---------- PDF viewer with quote highlighting ----------
+  let pdfDoc = null;
+  let pdfCurrentPage = 1;
+  let pdfHighlightQuote = '';
+
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  function normalize(s) {
+    return (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  }
+
+  async function openPdf(page, quote) {
+    const overlay = document.getElementById('pdfOverlay');
+    const status = document.getElementById('pdfStatus');
+    document.getElementById('pdfRawLink').href = PDF_URL + '#page=' + page;
+    overlay.classList.add('open');
+    pdfHighlightQuote = quote || '';
+
+    if (!window.pdfjsLib) {
+      status.textContent = 'PDF viewer library failed to load. Use "Open full PDF" instead.';
+      return;
+    }
+
+    try {
+      if (!pdfDoc) {
+        status.textContent = 'Loading PDF…';
+        pdfDoc = await pdfjsLib.getDocument(PDF_URL).promise;
+      }
+      await pdfGoto(page);
+    } catch (err) {
+      status.textContent = 'Could not load the PDF: ' + err.message +
+        ' — the file must be served from the same origin as this page.';
+    }
+  }
+
+  function closePdf() {
+    document.getElementById('pdfOverlay').classList.remove('open');
+  }
+
+  async function pdfGoto(pageNum) {
+    if (!pdfDoc) return;
+    if (pageNum < 1 || pageNum > pdfDoc.numPages) return;
+    pdfCurrentPage = pageNum;
+
+    const status = document.getElementById('pdfStatus');
+    const canvas = document.getElementById('pdfCanvas');
+    const textLayerDiv = document.getElementById('pdfTextLayer');
+    const wrap = document.getElementById('pdfPageWrap');
+
+    document.getElementById('pdfPageLabel').textContent =
+      'Page ' + pageNum + ' of ' + pdfDoc.numPages;
+    document.getElementById('pdfPrev').disabled = pageNum <= 1;
+    document.getElementById('pdfNext').disabled = pageNum >= pdfDoc.numPages;
+    status.textContent = 'Rendering page ' + pageNum + '…';
+
+    const page = await pdfDoc.getPage(pageNum);
+
+    // Fit width to the modal.
+    const available = document.getElementById('pdfScroll').clientWidth - 32;
+    const base = page.getViewport({ scale: 1 });
+    const scale = Math.min(available / base.width, 2);
+    const viewport = page.getViewport({ scale });
+
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    wrap.style.width = viewport.width + 'px';
+    wrap.style.height = viewport.height + 'px';
+
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+
+    // Text layer (needed for highlighting).
+    textLayerDiv.innerHTML = '';
+    textLayerDiv.style.width = viewport.width + 'px';
+    textLayerDiv.style.height = viewport.height + 'px';
+
+    const textContent = await page.getTextContent();
+    const textDivs = [];
+    await pdfjsLib.renderTextLayer({
+      textContent: textContent,
+      textContentSource: textContent,
+      container: textLayerDiv,
+      viewport: viewport,
+      textDivs: textDivs
+    }).promise;
+
+    const hits = highlightQuote(textLayerDiv, pdfHighlightQuote);
+    status.textContent = hits > 0
+      ? 'Highlighted the cited passage on this page.'
+      : (pdfHighlightQuote
+          ? 'Cited passage not found verbatim on this page — it may span a page break.'
+          : 'Page ' + pageNum + '.');
+  }
+
+  // Finds the quote across the page's text spans and marks the ones it covers.
+  function highlightQuote(container, quote) {
+    const spans = Array.from(container.querySelectorAll('span'));
+    if (!spans.length || !quote) return 0;
+
+    // Build one normalized string, remembering which span each character came from.
+    let full = '';
+    const ranges = [];
+    spans.forEach((span, i) => {
+      const t = normalize(span.textContent);
+      if (!t) return;
+      const start = full.length;
+      full += t + ' ';
+      ranges.push({ i, start, end: full.length });
+    });
+
+    const target = normalize(quote);
+    if (!target) return 0;
+
+    // Try the whole quote, then progressively shorter prefixes — retrieved quotes
+    // are often truncated or span a page boundary.
+    const attempts = [target];
+    [180, 120, 80, 50, 30].forEach(n => {
+      if (target.length > n) attempts.push(target.slice(0, n));
+    });
+
+    let at = -1;
+    let matchLen = 0;
+    for (const attempt of attempts) {
+      at = full.indexOf(attempt);
+      if (at !== -1) { matchLen = attempt.length; break; }
+    }
+    if (at === -1) return 0;
+
+    const matchEnd = at + matchLen;
+    let first = null;
+    let count = 0;
+    ranges.forEach(r => {
+      if (r.start < matchEnd && r.end > at) {
+        spans[r.i].classList.add('pdf-hl');
+        if (!first) first = spans[r.i];
+        count++;
+      }
+    });
+
+    if (first) {
+      first.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+    return count;
+  }
+
+  document.getElementById('pdfOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'pdfOverlay') closePdf();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closePdf();
+  });
 </script>
 
 </body>
