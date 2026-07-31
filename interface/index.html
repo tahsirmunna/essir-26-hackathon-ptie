@@ -6,240 +6,597 @@
 <title>PTIE — ESSIR 2026</title>
 <style>
   :root {
-    --bg: #0f1115;
-    --panel: #171a21;
-    --border: #262a33;
-    --text: #e8e9ec;
-    --muted: #8b8f9a;
-    --accent: #5b8cff;
-    --accent-dim: #2a3a63;
-    --user-bubble: #232838;
-    --bot-bubble: #1b1e26;
-    --error: #ff6b6b;
+    --sidebar-bg: #171717;
+    --sidebar-hover: #2a2a2a;
+    --sidebar-text: #ececec;
+    --sidebar-muted: #9b9b9b;
+    --main-bg: #ffffff;
+    --main-text: #0d0d0d;
+    --main-muted: #6e6e80;
+    --bubble-user: #f4f4f4;
+    --border: #e5e5e5;
+    --accent: #10a37f;
+    --accent-hover: #0d8c6d;
+    --error: #d1453b;
+    --error-bg: #fdf2f1;
   }
   * { box-sizing: border-box; }
-  body {
+  html, body {
+    height: 100%;
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    height: 100vh;
+  }
+  body {
+    display: flex;
+    background: var(--main-bg);
+    color: var(--main-text);
+  }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
     display: flex;
     flex-direction: column;
+    padding: 10px;
   }
-  header {
-    padding: 18px 24px;
-    border-bottom: 1px solid var(--border);
+  .sidebar-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    background: var(--panel);
+    gap: 10px;
+    padding: 10px 8px 16px 8px;
   }
-  header .title {
+  .logo-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--accent);
     display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  header .event {
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  header .team {
-    font-size: 18px;
+    align-items: center;
+    justify-content: center;
     font-weight: 700;
-    letter-spacing: 0.01em;
+    font-size: 13px;
+    color: white;
+    flex-shrink: 0;
   }
-  header .team span {
-    color: var(--accent);
-  }
-  .settings {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    font-size: 12px;
-    color: var(--muted);
-  }
-  .settings input, .settings select {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 6px;
-    padding: 6px 8px;
-    font-size: 12px;
-  }
-  .settings input[type="text"] {
-    width: 190px;
-  }
-  main {
-    flex: 1;
-    overflow-y: auto;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .msg {
-    max-width: 70%;
-    padding: 12px 14px;
-    border-radius: 12px;
-    line-height: 1.5;
-    font-size: 14.5px;
-    white-space: pre-wrap;
-  }
-  .msg.user {
-    align-self: flex-end;
-    background: var(--user-bubble);
-    border: 1px solid var(--accent-dim);
-  }
-  .msg.bot {
-    align-self: flex-start;
-    background: var(--bot-bubble);
-    border: 1px solid var(--border);
-  }
-  .msg.error {
-    align-self: flex-start;
-    background: #2a1a1a;
-    border: 1px solid var(--error);
-    color: var(--error);
-  }
-  .msg .level-tag {
-    display: inline-block;
-    font-size: 10px;
-    letter-spacing: 0.05em;
-    color: var(--muted);
-    margin-bottom: 6px;
-    text-transform: uppercase;
-  }
-  .empty {
-    margin: auto;
-    text-align: center;
-    color: var(--muted);
+  .sidebar-title {
     font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
   }
-  footer {
-    border-top: 1px solid var(--border);
-    background: var(--panel);
-    padding: 14px 24px;
+  .sidebar-title .sub {
+    font-size: 11px;
+    color: var(--sidebar-muted);
+    font-weight: 400;
+  }
+  .new-chat-btn {
     display: flex;
+    align-items: center;
     gap: 10px;
-    align-items: flex-end;
-  }
-  textarea {
-    flex: 1;
-    resize: none;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
+    width: 100%;
+    padding: 10px 12px;
+    background: transparent;
+    border: 1px solid #3d3d3d;
+    color: var(--sidebar-text);
     border-radius: 10px;
-    padding: 12px 14px;
-    font-size: 14.5px;
-    font-family: inherit;
-    height: 44px;
-    max-height: 140px;
+    font-size: 13px;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: background 0.15s;
   }
-  textarea:focus {
+  .new-chat-btn:hover { background: var(--sidebar-hover); }
+  .sidebar-section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sidebar-muted);
+    padding: 8px 12px 4px 12px;
+  }
+  .level-dropdown {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--sidebar-text);
+    background: var(--sidebar-hover);
+    border: 1px solid #3d3d3d;
+    margin-bottom: 4px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="%239b9b9b" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+  .level-dropdown:focus {
     outline: none;
     border-color: var(--accent);
   }
-  select#levelSelect {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 10px;
-    padding: 0 10px;
-    height: 44px;
-    font-size: 13px;
+  .level-dropdown option {
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
   }
-  button#send {
-    background: var(--accent);
+  .sidebar-footer {
+    margin-top: auto;
+    border-top: 1px solid #2f2f2f;
+    padding-top: 10px;
+  }
+  .settings-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    background: transparent;
     border: none;
-    color: white;
+    color: var(--sidebar-text);
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .settings-btn:hover { background: var(--sidebar-hover); }
+
+  /* ---------- Main ---------- */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    min-width: 0;
+  }
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 15px;
     font-weight: 600;
-    font-size: 14px;
-    padding: 0 20px;
-    height: 44px;
+    position: relative;
+  }
+  .topbar .level-pill {
+    position: absolute;
+    right: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--main-muted);
+    background: #f4f4f4;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  .chat-scroll {
+    flex: 1;
+    overflow-y: auto;
+  }
+  .chat-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 20px 140px 20px;
+  }
+  .empty-state {
+    height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--main-muted);
+  }
+  .empty-state .big-dot {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: var(--accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  .empty-state h2 {
+    font-size: 18px;
+    color: var(--main-text);
+    margin: 0 0 6px 0;
+  }
+  .empty-state p {
+    font-size: 13.5px;
+    margin: 0;
+    max-width: 320px;
+  }
+
+  .row {
+    display: flex;
+    gap: 14px;
+    padding: 18px 0;
+    align-items: flex-start;
+  }
+  .avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+  }
+  .avatar.assistant { background: var(--accent); }
+  .avatar.user { background: #6e6e80; }
+  .msg-body {
+    flex: 1;
+    min-width: 0;
+    padding-top: 3px;
+  }
+  .msg-role {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--main-muted);
+    margin-bottom: 4px;
+  }
+  .msg-text {
+    font-size: 15px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .row.user .msg-text {
+    background: var(--bubble-user);
+    padding: 10px 14px;
+    border-radius: 14px;
+    display: inline-block;
+  }
+  .row.error .msg-text {
+    color: var(--error);
+    background: var(--error-bg);
+    padding: 10px 14px;
     border-radius: 10px;
+    display: inline-block;
+    font-size: 13.5px;
+  }
+  .level-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: #e6f6f1;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  .sources {
+    margin-top: 10px;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+  }
+  .sources summary {
+    font-size: 12px;
+    color: var(--main-muted);
     cursor: pointer;
   }
-  button#send:disabled {
-    background: var(--accent-dim);
+  .source-item {
+    font-size: 12.5px;
+    color: var(--main-muted);
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .source-item .score {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .typing-dots {
+    display: flex;
+    gap: 4px;
+    padding-top: 6px;
+  }
+  .typing-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--main-muted);
+    animation: blink 1.2s infinite ease-in-out;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0.25; }
+    40% { opacity: 1; }
+  }
+
+  /* ---------- Composer ---------- */
+  .composer-wrap {
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(to top, var(--main-bg) 60%, transparent);
+    padding: 12px 20px 20px 20px;
+  }
+  .composer {
+    max-width: 720px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    background: var(--main-bg);
+    border: 1px solid var(--border);
+    border-radius: 26px;
+    padding: 10px 10px 10px 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  .composer textarea {
+    flex: 1;
+    border: none;
+    outline: none;
+    resize: none;
+    font-size: 15px;
+    font-family: inherit;
+    max-height: 160px;
+    height: 24px;
+    line-height: 1.5;
+    padding: 4px 0;
+    color: var(--main-text);
+  }
+  .composer textarea::placeholder { color: #b0b0b0; }
+  .send-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--main-text);
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .send-btn:hover:not(:disabled) { background: var(--accent); }
+  .send-btn:disabled {
+    background: #d9d9d9;
     cursor: not-allowed;
   }
-  .typing {
-    align-self: flex-start;
-    color: var(--muted);
+  .composer-hint {
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--main-muted);
+    margin-top: 8px;
+  }
+
+  /* ---------- Settings modal ---------- */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 14px;
+    padding: 22px;
+    width: 380px;
+    max-width: 90vw;
+  }
+  .modal h3 {
+    margin: 0 0 14px 0;
+    font-size: 15px;
+  }
+  .modal label {
+    font-size: 12.5px;
+    color: var(--main-muted);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .modal input[type="text"] {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13.5px;
+    margin-bottom: 16px;
+    color: var(--main-text);
+  }
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .modal-actions button {
+    padding: 8px 16px;
+    border-radius: 8px;
     font-size: 13px;
-    padding: 4px 4px;
+    cursor: pointer;
+    border: none;
+  }
+  .btn-cancel { background: #f0f0f0; color: var(--main-text); }
+  .btn-save { background: var(--main-text); color: white; }
+
+  @media (max-width: 700px) {
+    .sidebar { display: none; }
   }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="title">
-    <div class="event">ESSIR 2026 — The Fourth Turn</div>
-    <div class="team">TEAM <span>PTIE</span></div>
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-dot">P</div>
+    <div class="sidebar-title">TEAM PTIE<div class="sub">ESSIR 2026 — The Fourth Turn</div></div>
   </div>
-  <div class="settings">
-    <label>API</label>
-    <input id="apiUrl" type="text" value="https://memoriease.computing.dcu.ie/backend/query"> 
-    <label>Level</label>
-    <select id="levelSelect">
-      <option value="1">1 — Retrieval</option>
-      <option value="2">2 — Memory</option>
-      <option value="3">3 — Reasoning</option>
-    </select>
+  <button class="new-chat-btn" onclick="resetChat()">
+    <span>+</span> New conversation
+  </button>
+  <div class="sidebar-section-label">Question level</div>
+  <select id="levelSelect" class="level-dropdown" onchange="setLevel(parseInt(this.value, 10))">
+    <option value="1">Level 1 — Retrieval</option>
+    <option value="2">Level 2 — Memory</option>
+    <option value="3">Level 3 — Reasoning</option>
+  </select>
+  <div class="sidebar-footer">
+    <button class="settings-btn" onclick="openSettings()">⚙️ &nbsp; API settings</button>
   </div>
-</header>
+</div>
 
-<main id="chat">
-  <div class="empty" id="emptyState">Ask a question about your document to get started.</div>
-</main>
+<div class="main">
+  <div class="topbar">
+    Chat with your document
+    <span class="level-pill" id="levelPill">Level 1</span>
+  </div>
 
-<footer>
-  <textarea id="input" placeholder="Ask a question..." rows="1"></textarea>
-  <button id="send">Send</button>
-</footer>
+  <div class="chat-scroll" id="chatScroll">
+    <div class="chat-inner" id="chatInner">
+      <div class="empty-state" id="emptyState">
+        <div class="big-dot">P</div>
+        <h2>Ask anything about the document</h2>
+        <p>Pick a level on the left, type a question below, and PTIE will answer it grounded in your PDF.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="composer-wrap">
+    <div class="composer">
+      <textarea id="input" placeholder="Ask a question..." rows="1"></textarea>
+      <button class="send-btn" id="sendBtn" title="Send">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 19V5M12 5L5 12M12 5L19 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="composer-hint">PTIE can make mistakes. Answers are grounded in the retrieved document context.</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h3>API settings</h3>
+    <label>Query endpoint URL</label>
+    <input type="text" id="apiUrl" value="https://memoriease.computing.dcu.ie/backend/query">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSettings()">Cancel</button>
+      <button class="btn-save" onclick="closeSettings()">Save</button>
+    </div>
+  </div>
+</div>
 
 <script>
-  const chat = document.getElementById('chat');
+  const chatInner = document.getElementById('chatInner');
+  const chatScroll = document.getElementById('chatScroll');
   const input = document.getElementById('input');
-  const sendBtn = document.getElementById('send');
+  const sendBtn = document.getElementById('sendBtn');
   const apiUrlInput = document.getElementById('apiUrl');
-  const levelSelect = document.getElementById('levelSelect');
   const emptyState = document.getElementById('emptyState');
+  const levelPill = document.getElementById('levelPill');
 
-  function addMessage(text, cls, levelTag) {
-    if (emptyState) emptyState.remove();
+  let currentLevel = 1;
+
+  function setLevel(level) {
+    currentLevel = level;
+    levelPill.textContent = 'Level ' + level;
+  }
+
+  function openSettings() { document.getElementById('settingsModal').classList.add('open'); }
+  function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
+
+  function resetChat() {
+    chatInner.innerHTML = '';
     const div = document.createElement('div');
-    div.className = 'msg ' + cls;
-    if (levelTag) {
-      const tag = document.createElement('div');
-      tag.className = 'level-tag';
-      tag.textContent = levelTag;
-      div.appendChild(tag);
+    div.className = 'empty-state';
+    div.id = 'emptyState';
+    div.innerHTML = '<div class="big-dot">P</div><h2>Ask anything about the document</h2><p>Pick a level on the left, type a question below, and PTIE will answer it grounded in your PDF.</p>';
+    chatInner.appendChild(div);
+  }
+
+  function clearEmptyState() {
+    const el = document.getElementById('emptyState');
+    if (el) el.remove();
+  }
+
+  function scrollToBottom() {
+    chatScroll.scrollTop = chatScroll.scrollHeight;
+  }
+
+  function addUserMessage(text) {
+    clearEmptyState();
+    const row = document.createElement('div');
+    row.className = 'row user';
+    row.innerHTML = `
+      <div class="avatar user">Y</div>
+      <div class="msg-body">
+        <div class="msg-role">You</div>
+        <div class="msg-text"></div>
+      </div>`;
+    row.querySelector('.msg-text').textContent = text;
+    chatInner.appendChild(row);
+    scrollToBottom();
+  }
+
+  function addAssistantMessage(answerText, level, sources, isError) {
+    clearEmptyState();
+    const row = document.createElement('div');
+    row.className = 'row' + (isError ? ' error' : '');
+    const avatarLetter = isError ? '!' : 'P';
+    row.innerHTML = `
+      <div class="avatar assistant">${avatarLetter}</div>
+      <div class="msg-body">
+        <div class="msg-role">PTIE</div>
+        ${!isError ? `<div class="level-badge">Level ${level}</div>` : ''}
+        <div class="msg-text"></div>
+      </div>`;
+    row.querySelector('.msg-text').textContent = answerText;
+
+    if (!isError && sources && sources.length) {
+      const sortedSources = [...sources].sort((a, b) => (b.score || 0) - (a.score || 0));
+      const details = document.createElement('details');
+      details.className = 'sources';
+      const summary = document.createElement('summary');
+      summary.textContent = `${sortedSources.length} source${sortedSources.length > 1 ? 's' : ''}`;
+      details.appendChild(summary);
+      sortedSources.forEach(s => {
+        const item = document.createElement('div');
+        item.className = 'source-item';
+        const scoreText = s.score !== undefined ? ` <span class="score">${s.score.toFixed(4)}</span>` : '';
+        const pageText = s.page !== undefined ? `Page ${s.page}` : 'Source';
+        item.innerHTML = `${pageText}${scoreText}<br>${(s.quote || '').slice(0, 220)}${(s.quote || '').length > 220 ? '…' : ''}`;
+        details.appendChild(item);
+      });
+      row.querySelector('.msg-body').appendChild(details);
     }
-    const body = document.createElement('div');
-    body.textContent = text;
-    div.appendChild(body);
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-    return div;
+
+    chatInner.appendChild(row);
+    scrollToBottom();
   }
 
   function addTyping() {
-    const div = document.createElement('div');
-    div.className = 'typing';
-    div.id = 'typingIndicator';
-    div.textContent = 'Thinking...';
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
+    clearEmptyState();
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.id = 'typingRow';
+    row.innerHTML = `
+      <div class="avatar assistant">P</div>
+      <div class="msg-body">
+        <div class="msg-role">PTIE</div>
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+      </div>`;
+    chatInner.appendChild(row);
+    scrollToBottom();
   }
 
   function removeTyping() {
-    const el = document.getElementById('typingIndicator');
+    const el = document.getElementById('typingRow');
     if (el) el.remove();
   }
 
@@ -248,11 +605,11 @@
     if (!question) return;
 
     const url = apiUrlInput.value.trim();
-    const level = parseInt(levelSelect.value, 10);
+    const level = currentLevel;
 
-    addMessage(question, 'user');
+    addUserMessage(question);
     input.value = '';
-    input.style.height = '44px';
+    input.style.height = '24px';
     sendBtn.disabled = true;
     addTyping();
 
@@ -267,17 +624,16 @@
       removeTyping();
 
       if (!res.ok) {
-        addMessage(data.detail || 'Request failed with status ' + res.status, 'error');
+        addAssistantMessage(data.detail || ('Request failed with status ' + res.status), level, null, true);
       } else {
         const answerText = data.answer || data.response || JSON.stringify(data, null, 2);
-        addMessage(answerText, 'bot', 'Level ' + level);
+        addAssistantMessage(answerText, level, data.sources, false);
       }
     } catch (err) {
       removeTyping();
-      addMessage(
-        'Could not reach the API. Check that docker compose is running, the URL above is correct, ' +
-        'and that CORS is enabled on the server. (' + err.message + ')',
-        'error'
+      addAssistantMessage(
+        'Could not reach the API. Check the endpoint URL in settings, that the server is running, and that CORS is enabled. (' + err.message + ')',
+        level, null, true
       );
     } finally {
       sendBtn.disabled = false;
@@ -293,8 +649,11 @@
     }
   });
   input.addEventListener('input', () => {
-    input.style.height = '44px';
-    input.style.height = Math.min(input.scrollHeight, 140) + 'px';
+    input.style.height = '24px';
+    input.style.height = Math.min(input.scrollHeight, 160) + 'px';
+  });
+  document.getElementById('settingsModal').addEventListener('click', (e) => {
+    if (e.target.id === 'settingsModal') closeSettings();
   });
 </script>
 
