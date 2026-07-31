@@ -119,10 +119,51 @@
     background: var(--sidebar-bg);
     color: var(--sidebar-text);
   }
+  .history-list {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 4px;
+    min-height: 0;
+  }
+  .history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--sidebar-text);
+    cursor: pointer;
+    margin-bottom: 2px;
+  }
+  .history-item:hover { background: var(--sidebar-hover); }
+  .history-item.active { background: var(--sidebar-hover); }
+  .history-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .history-delete {
+    background: transparent;
+    border: none;
+    color: var(--sidebar-muted);
+    font-size: 17px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+    opacity: 0;
+    flex-shrink: 0;
+  }
+  .history-item:hover .history-delete { opacity: 1; }
+  .history-delete:hover { color: #f28b82; }
+
   .sidebar-footer {
-    margin-top: auto;
+    flex-shrink: 0;
     border-top: 1px solid #2f2f2f;
     padding-top: 10px;
+    margin-top: 8px;
   }
   .settings-btn {
     display: flex;
@@ -190,21 +231,8 @@
   .empty-state .logo-mark {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 22px;
-  }
-  .empty-state .logo-mark .logo-dot-lg {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: var(--accent);
-    color: white;
-    display: flex;
-    align-items: center;
     justify-content: center;
-    font-weight: 700;
-    font-size: 20px;
-    flex-shrink: 0;
+    margin-bottom: 22px;
   }
   .empty-state .logo-mark .logo-text {
     font-size: 24px;
@@ -588,6 +616,9 @@
     <option value="3">Level 3 — Reasoning</option>
   </select>
 
+  <div class="sidebar-section-label" id="historyLabel" style="display:none">Recent chats</div>
+  <div class="history-list" id="historyList"></div>
+
   <div class="sidebar-footer">
     <button class="settings-btn" onclick="openSettings()">⚙️ &nbsp; API settings</button>
   </div>
@@ -608,7 +639,6 @@
     <div class="chat-inner" id="chatInner">
       <div class="empty-state" id="emptyState">
         <div class="logo-mark">
-          <div class="logo-dot-lg">P</div>
           <div class="logo-text">TEAM <span>PTIE</span></div>
         </div>
         <h2>Ask anything about the document</h2>
@@ -651,54 +681,148 @@
   const emptyState = document.getElementById('emptyState');
   const levelPill = document.getElementById('levelPill');
 
-  // Set this to where your backend serves the PDF, e.g. via a StaticFiles mount.
-  // Leave as '' if you haven't set that up yet — source page numbers will show as plain text.
-  const PDF_URL = 'https://raw.githubusercontent.com/tahsirmunna/essir-26-hackathon-ptie/main/data/in/paper.pdf';
+  // Served via GitHub Pages (not raw.githubusercontent) so the browser opens the PDF
+  // inline and honours the #page=N anchor instead of downloading the file.
+  const PDF_URL = 'https://tahsirmunna.github.io/essir-26-hackathon-ptie/data/in/paper.pdf';
 
   let currentLevel = 1;
-  const SESSION_KEY = 'ptie_chat_session';
+  const STORE_KEY = 'ptie_conversations';
+  let conversations = [];      // [{ id, title, level, messages, updated }]
+  let activeId = null;
   let sessionMessages = [];
 
   function setLevel(level) {
     currentLevel = level;
     levelPill.textContent = 'Level ' + level;
     closeSidebar();
-    saveSession();
+    persist();
   }
 
-  function saveSession() {
+  function loadStore() {
     try {
-      localStorage.setItem(SESSION_KEY, JSON.stringify({
-        level: currentLevel,
-        messages: sessionMessages
-      }));
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) conversations = parsed;
+      }
+    } catch (e) {
+      console.warn('Could not load chat history:', e);
+    }
+  }
+
+  function saveStore() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(conversations));
     } catch (e) {
       console.warn('Could not save chat history:', e);
     }
   }
 
-  function loadSession() {
-    let saved = null;
-    try {
-      const raw = localStorage.getItem(SESSION_KEY);
-      if (raw) saved = JSON.parse(raw);
-    } catch (e) {
-      console.warn('Could not load chat history:', e);
-      return;
-    }
-    if (!saved || !Array.isArray(saved.messages) || saved.messages.length === 0) return;
+  // Writes the in-progress chat back into the conversations list, then saves.
+  function persist() {
+    if (sessionMessages.length === 0) { saveStore(); renderHistory(); return; }
 
-    currentLevel = saved.level || 1;
+    let convo = conversations.find(c => c.id === activeId);
+    if (!convo) {
+      convo = { id: activeId || String(Date.now()), title: '', level: currentLevel, messages: [], updated: Date.now() };
+      activeId = convo.id;
+      conversations.unshift(convo);
+    }
+    convo.messages = sessionMessages;
+    convo.level = currentLevel;
+    convo.updated = Date.now();
+
+    // Title from the first user question.
+    const firstUser = sessionMessages.find(m => m.type === 'user');
+    convo.title = firstUser ? firstUser.text.slice(0, 60) : 'New conversation';
+
+    saveStore();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('historyList');
+    const label = document.getElementById('historyLabel');
+    if (!list) return;
+    list.innerHTML = '';
+
+    const sorted = [...conversations]
+      .filter(c => c.messages && c.messages.length > 0)
+      .sort((a, b) => (b.updated || 0) - (a.updated || 0));
+
+    label.style.display = sorted.length ? 'block' : 'none';
+
+    sorted.forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'history-item' + (c.id === activeId ? ' active' : '');
+
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'history-title';
+      titleSpan.textContent = c.title || 'Untitled';
+      titleSpan.onclick = () => openConversation(c.id);
+
+      const del = document.createElement('button');
+      del.className = 'history-delete';
+      del.innerHTML = '×';
+      del.title = 'Delete';
+      del.onclick = (e) => { e.stopPropagation(); deleteConversation(c.id); };
+
+      item.appendChild(titleSpan);
+      item.appendChild(del);
+      list.appendChild(item);
+    });
+  }
+
+  function renderMessages(messages) {
+    chatInner.innerHTML = '';
+    if (!messages || messages.length === 0) { showEmptyState(); return; }
+    messages.forEach(m => {
+      if (m.type === 'user') addUserMessage(m.text, false);
+      else addAssistantMessage(m.text, m.level, m.sources, m.isError, false);
+    });
+  }
+
+  function openConversation(id) {
+    const convo = conversations.find(c => c.id === id);
+    if (!convo) return;
+    activeId = id;
+    sessionMessages = convo.messages.slice();
+    currentLevel = convo.level || 1;
     document.getElementById('levelSelect').value = String(currentLevel);
     levelPill.textContent = 'Level ' + currentLevel;
+    renderMessages(sessionMessages);
+    renderHistory();
+    closeSidebar();
+  }
 
-    saved.messages.forEach(m => {
-      if (m.type === 'user') {
-        addUserMessage(m.text, false);
-      } else {
-        addAssistantMessage(m.text, m.level, m.sources, m.isError, false);
-      }
-    });
+  function deleteConversation(id) {
+    conversations = conversations.filter(c => c.id !== id);
+    saveStore();
+    if (id === activeId) {
+      activeId = null;
+      sessionMessages = [];
+      showEmptyState();
+    }
+    renderHistory();
+  }
+
+  function showEmptyState() {
+    chatInner.innerHTML = '';
+    const div = document.createElement('div');
+    div.className = 'empty-state';
+    div.id = 'emptyState';
+    div.innerHTML = '<div class="logo-mark"><div class="logo-text">TEAM <span>PTIE</span></div></div><h2>Ask anything about the document</h2><p>Pick a level on the left, type a question below, and PTIE will answer it grounded in your PDF.</p>';
+    chatInner.appendChild(div);
+  }
+
+  function initApp() {
+    loadStore();
+    renderHistory();
+    // Reopen the most recent conversation, if any.
+    const recent = [...conversations]
+      .filter(c => c.messages && c.messages.length > 0)
+      .sort((a, b) => (b.updated || 0) - (a.updated || 0))[0];
+    if (recent) openConversation(recent.id);
   }
 
   function openSettings() { document.getElementById('settingsModal').classList.add('open'); }
@@ -715,14 +839,12 @@
 
   function resetChat() {
     closeSidebar();
-    chatInner.innerHTML = '';
+    // The current chat stays in `conversations` — we just start a new empty one.
+    persist();
+    activeId = null;
     sessionMessages = [];
-    saveSession();
-    const div = document.createElement('div');
-    div.className = 'empty-state';
-    div.id = 'emptyState';
-    div.innerHTML = '<div class="logo-mark"><div class="logo-dot-lg">P</div><div class="logo-text">TEAM <span>PTIE</span></div></div><h2>Ask anything about the document</h2><p>Pick a level on the left, type a question below, and PTIE will answer it grounded in your PDF.</p>';
-    chatInner.appendChild(div);
+    showEmptyState();
+    renderHistory();
   }
 
   function clearEmptyState() {
@@ -749,7 +871,7 @@
     scrollToBottom();
     if (record) {
       sessionMessages.push({ type: 'user', text });
-      saveSession();
+      persist();
     }
   }
 
@@ -793,7 +915,7 @@
     scrollToBottom();
     if (record) {
       sessionMessages.push({ type: 'assistant', text: answerText, level, sources: sources || null, isError: !!isError });
-      saveSession();
+      persist();
     }
   }
 
@@ -873,7 +995,7 @@
     if (e.target.id === 'settingsModal') closeSettings();
   });
 
-  loadSession();
+  initApp();
 </script>
 
 </body>
