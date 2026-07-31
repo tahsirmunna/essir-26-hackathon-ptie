@@ -1,0 +1,10 @@
+question,level
+What is the purpose of the reranker?,1
+What formats can rewritten queries take?,1
+What are search agents?,1
+How is that different from the retriever?,2
+Which of those works particularly well with sparse retrievers?,2
+How do they differ from conventional Information Retrieval systems?,2
+Compare the roles of the retriever, reranker and reader in a modern Information Retrieval pipeline,3
+How do prompting, supervised fine-tuning and reinforcement learning differ when used for query rewriting, and what advantages does each approach offer?,3
+How do Large Language Models contribute differently to conversational search than they do to ad-hoc search?,3
