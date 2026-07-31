@@ -294,6 +294,14 @@
     color: var(--accent);
     font-weight: 600;
   }
+  .source-link {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .source-link:hover {
+    text-decoration: underline;
+  }
 
   .typing-dots {
     display: flex;
@@ -426,13 +434,131 @@
   .btn-save { background: var(--main-text); color: white; }
 
   @media (max-width: 700px) {
-    .sidebar { display: none; }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 60;
+      transform: translateX(-100%);
+      transition: transform 0.2s ease;
+      width: 260px;
+      box-shadow: 2px 0 12px rgba(0,0,0,0.25);
+    }
+    .sidebar.open {
+      transform: translateX(0);
+    }
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 55;
+    }
+    .sidebar-backdrop.open {
+      display: block;
+    }
+    .menu-btn {
+      display: flex;
+    }
+    .topbar {
+      justify-content: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      font-size: 14px;
+    }
+    .topbar .title-text {
+      flex: 1;
+      text-align: center;
+    }
+    .topbar .level-pill {
+      position: static;
+      font-size: 10px;
+      padding: 3px 8px;
+      white-space: nowrap;
+    }
+    .chat-inner {
+      padding: 16px 14px 130px 14px;
+    }
+    .row {
+      gap: 10px;
+      padding: 14px 0;
+    }
+    .avatar {
+      width: 24px;
+      height: 24px;
+      font-size: 11px;
+    }
+    .msg-text {
+      font-size: 14.5px;
+    }
+    .msg-role {
+      font-size: 11px;
+    }
+    .row.user .msg-text {
+      max-width: 85%;
+    }
+    .empty-state {
+      height: 50vh;
+    }
+    .empty-state h2 {
+      font-size: 16px;
+    }
+    .empty-state p {
+      font-size: 13px;
+      padding: 0 10px;
+    }
+    .composer-wrap {
+      padding: 10px 12px 16px 12px;
+    }
+    .composer {
+      padding: 8px 8px 8px 16px;
+      border-radius: 22px;
+    }
+    .composer textarea {
+      font-size: 16px;
+    }
+    .send-btn {
+      width: 32px;
+      height: 32px;
+    }
+    .composer-hint {
+      font-size: 10.5px;
+      padding: 0 10px;
+    }
+    .modal {
+      width: 92vw;
+      padding: 18px;
+    }
   }
+
+  @media (min-width: 701px) {
+    .menu-btn { display: none; }
+    .sidebar-backdrop { display: none; }
+  }
+
+  .menu-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--main-text);
+    flex-shrink: 0;
+  }
+  .menu-btn:hover { background: #f4f4f4; }
+
 </style>
 </head>
 <body>
 
-<div class="sidebar">
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<div class="sidebar" id="sidebar">
   <div class="sidebar-header">
     <div class="logo-dot">P</div>
     <div class="sidebar-title">TEAM PTIE<div class="sub">ESSIR 2026 — The Fourth Turn</div></div>
@@ -446,6 +572,7 @@
     <option value="2">Level 2 — Memory</option>
     <option value="3">Level 3 — Reasoning</option>
   </select>
+
   <div class="sidebar-footer">
     <button class="settings-btn" onclick="openSettings()">⚙️ &nbsp; API settings</button>
   </div>
@@ -453,7 +580,12 @@
 
 <div class="main">
   <div class="topbar">
-    Chat with your document
+    <button class="menu-btn" id="menuBtn" onclick="openSidebar()" title="Menu">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <span class="title-text">Chat with your document</span>
     <span class="level-pill" id="levelPill">Level 1</span>
   </div>
 
@@ -501,18 +633,72 @@
   const emptyState = document.getElementById('emptyState');
   const levelPill = document.getElementById('levelPill');
 
+  // Set this to where your backend serves the PDF, e.g. via a StaticFiles mount.
+  // Leave as '' if you haven't set that up yet — source page numbers will show as plain text.
+  const PDF_URL = 'https://memoriease.computing.dcu.ie/backend/documents/yourfile.pdf';
+
   let currentLevel = 1;
+  const SESSION_KEY = 'ptie_chat_session';
+  let sessionMessages = [];
 
   function setLevel(level) {
     currentLevel = level;
     levelPill.textContent = 'Level ' + level;
+    closeSidebar();
+    saveSession();
+  }
+
+  function saveSession() {
+    try {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+        level: currentLevel,
+        messages: sessionMessages
+      }));
+    } catch (e) {
+      // sessionStorage unavailable or full — chat still works, just won't persist
+    }
+  }
+
+  function loadSession() {
+    let saved = null;
+    try {
+      const raw = sessionStorage.getItem(SESSION_KEY);
+      if (raw) saved = JSON.parse(raw);
+    } catch (e) {
+      return;
+    }
+    if (!saved || !Array.isArray(saved.messages) || saved.messages.length === 0) return;
+
+    currentLevel = saved.level || 1;
+    document.getElementById('levelSelect').value = String(currentLevel);
+    levelPill.textContent = 'Level ' + currentLevel;
+
+    saved.messages.forEach(m => {
+      if (m.type === 'user') {
+        addUserMessage(m.text, false);
+      } else {
+        addAssistantMessage(m.text, m.level, m.sources, m.isError, false);
+      }
+    });
   }
 
   function openSettings() { document.getElementById('settingsModal').classList.add('open'); }
   function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
 
+  function openSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('sidebarBackdrop').classList.add('open');
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarBackdrop').classList.remove('open');
+  }
+
   function resetChat() {
+    closeSidebar();
     chatInner.innerHTML = '';
+    sessionMessages = [];
+    saveSession();
     const div = document.createElement('div');
     div.className = 'empty-state';
     div.id = 'emptyState';
@@ -529,7 +715,7 @@
     chatScroll.scrollTop = chatScroll.scrollHeight;
   }
 
-  function addUserMessage(text) {
+  function addUserMessage(text, record = true) {
     clearEmptyState();
     const row = document.createElement('div');
     row.className = 'row user';
@@ -542,9 +728,13 @@
     row.querySelector('.msg-text').textContent = text;
     chatInner.appendChild(row);
     scrollToBottom();
+    if (record) {
+      sessionMessages.push({ type: 'user', text });
+      saveSession();
+    }
   }
 
-  function addAssistantMessage(answerText, level, sources, isError) {
+  function addAssistantMessage(answerText, level, sources, isError, record = true) {
     clearEmptyState();
     const row = document.createElement('div');
     row.className = 'row' + (isError ? ' error' : '');
@@ -569,8 +759,12 @@
         const item = document.createElement('div');
         item.className = 'source-item';
         const scoreText = s.score !== undefined ? ` <span class="score">${s.score.toFixed(4)}</span>` : '';
-        const pageText = s.page !== undefined ? `Page ${s.page}` : 'Source';
-        item.innerHTML = `${pageText}${scoreText}<br>${(s.quote || '').slice(0, 220)}${(s.quote || '').length > 220 ? '…' : ''}`;
+        const quoteText = (s.quote || '').slice(0, 220) + ((s.quote || '').length > 220 ? '…' : '');
+        const pageLabel = s.page !== undefined ? `Page ${s.page}` : 'Source';
+        const pdfLink = (s.page !== undefined && PDF_URL)
+          ? `<a href="${PDF_URL}#page=${s.page}" target="_blank" rel="noopener" class="source-link">${pageLabel} ↗</a>`
+          : pageLabel;
+        item.innerHTML = `${pdfLink}${scoreText}<br>${quoteText}`;
         details.appendChild(item);
       });
       row.querySelector('.msg-body').appendChild(details);
@@ -578,6 +772,10 @@
 
     chatInner.appendChild(row);
     scrollToBottom();
+    if (record) {
+      sessionMessages.push({ type: 'assistant', text: answerText, level, sources: sources || null, isError: !!isError });
+      saveSession();
+    }
   }
 
   function addTyping() {
@@ -655,6 +853,8 @@
   document.getElementById('settingsModal').addEventListener('click', (e) => {
     if (e.target.id === 'settingsModal') closeSettings();
   });
+
+  loadSession();
 </script>
 
 </body>
